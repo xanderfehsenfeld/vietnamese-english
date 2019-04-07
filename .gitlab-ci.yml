@@ -1,0 +1,14 @@
+image: node:8-alpine
+
+cache:
+  key: '$CI_BUILD_REF_NAME node:8-alpine'
+  paths:
+    - node_modules/
+stages:
+  - build
+before_script:
+  - npm install
+build:
+  stage: build
+  script:
+    - npm run build

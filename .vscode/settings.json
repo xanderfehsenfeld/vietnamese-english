@@ -1,0 +1,12 @@
+{
+  "cSpell.words": [
+    "datetime",
+    "localtimestamp",
+    "mmsi",
+    "noserver",
+    "promisify",
+    "typeorm",
+    "unmock"
+  ],
+  "editor.formatOnSave": true,
+}
