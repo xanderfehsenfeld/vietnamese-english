@@ -15,9 +15,11 @@
     "start": "node build/server/bundle.js"
   },
   "dependencies": {
+    "@vntk/dictionary": "^1.0.0",
     "axios": "^0.18.0",
     "bootstrap": "^4.3.1",
     "express": "^4.16.4",
+    "lodash": "^4.17.11",
     "lodash.mapvalues": "^4.6.0",
     "lodash.transform": "^4.6.0",
     "prop-types": "^15.7.2",

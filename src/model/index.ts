@@ -1,13 +1,8 @@
-export interface Entity {
-  id: string
+export interface Definition {
+  example: string
+  definition: string
 }
-export type Coupon = Entity & {
-  name: string
-  isAvailable: boolean
-}
-export type Partner = Entity & {
-  partnerDescription: string
-  website: string
-  cloudPlatformPartner: boolean
-  dt: Date
+
+export interface Dictionary {
+  [key: string]: Definition[]
 }
