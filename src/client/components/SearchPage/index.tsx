@@ -8,7 +8,12 @@ import DefinitionPage from '../DefinitionPage'
 
 interface IState {
   query: string
-  suggestions?: { text: string; example: string; definition: string }[]
+  suggestions?: {
+    text: string
+    example: string
+    definition: string
+    start: number
+  }[]
   isFetching: boolean
   dictionary?: Dictionary
 }
@@ -19,7 +24,7 @@ class SearchContainer extends Container<IState> {
     const { dictionary } = this.state
     if (dictionary && changedQuery) {
       const dictionaryFilteredByQuery = pickBy(dictionary, (value, key) =>
-        key.toLowerCase().startsWith(changedQuery.toLowerCase()),
+        key.toLowerCase().includes(changedQuery.toLowerCase()),
       )
 
       const suggestions = orderBy(
@@ -27,6 +32,7 @@ class SearchContainer extends Container<IState> {
           text: key,
           example: value[0].example,
           definition: value[0].definition,
+          start: key.toLowerCase().indexOf(changedQuery.toLowerCase()),
         })),
         ({ text }) => text,
       )
@@ -76,8 +82,10 @@ const Search = () => (
                   style={{ cursor: 'pointer', paddingBottom: 4, paddingTop: 3 }}
                   onClick={() => onChange(v.text)}
                 >
+                  {v.text.substring(0, v.start)}
+
                   <strong>{state.query}</strong>
-                  {v.text.slice(state.query.length)}
+                  {v.text.substring(v.start + state.query.length)}
                   {' : '}
                   <em>{v.definition}</em>
                 </div>
