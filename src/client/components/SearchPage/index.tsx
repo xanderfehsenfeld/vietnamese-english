@@ -3,7 +3,8 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary } from 'model'
-import { pickBy, map } from 'lodash'
+import { pickBy, map, orderBy } from 'lodash'
+import DefinitionPage from '../DefinitionPage'
 
 interface IState {
   query: string
@@ -17,13 +18,17 @@ class SearchContainer extends Container<IState> {
   onChange = (changedQuery: string) => {
     const { dictionary } = this.state
     if (dictionary && changedQuery) {
-      const suggestions = map(
-        pickBy(dictionary, (value, key) => key.startsWith(changedQuery)),
-        (value, key) => ({
+      const dictionaryFilteredByQuery = pickBy(dictionary, (value, key) =>
+        key.toLowerCase().startsWith(changedQuery.toLowerCase()),
+      )
+
+      const suggestions = orderBy(
+        map(dictionaryFilteredByQuery, (value, key) => ({
           text: key,
           example: value[0].example,
           definition: value[0].definition,
-        }),
+        })),
+        ({ text }) => text,
       )
       this.setState({
         suggestions,
@@ -63,7 +68,7 @@ const Search = () => (
           <div>
             {state.suggestions &&
               state.suggestions.length > 1 &&
-              state.suggestions.slice(0, 100).map((v) => (
+              state.suggestions.slice(0, 15).map((v) => (
                 <div
                   title={v.example}
                   key={v.text}
@@ -76,6 +81,15 @@ const Search = () => (
                   {' : '}
                   <em>{v.definition}</em>
                 </div>
+              ))}
+            {state.suggestions &&
+              state.dictionary &&
+              state.suggestions.length === 1 &&
+              state.suggestions.map(({ text }) => (
+                <DefinitionPage
+                  definitions={state.dictionary[text]}
+                  text={text}
+                />
               ))}
           </div>
         </div>
