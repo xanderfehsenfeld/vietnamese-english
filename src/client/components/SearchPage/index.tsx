@@ -2,20 +2,21 @@ import React from 'react'
 import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
-import { Dictionary } from 'model'
-import { pickBy, map, orderBy } from 'lodash'
+import { Dictionary, Definition } from 'model'
+import { pickBy, map, orderBy, uniqBy } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 
 interface IState {
   query: string
   suggestions?: {
     text: string
-    example: string
-    definition: string
+
+    definitions: Definition[]
     start: number
   }[]
   isFetching: boolean
   dictionary?: Dictionary
+  selectedWord?: string
 }
 
 class SearchContainer extends Container<IState> {
@@ -27,23 +28,24 @@ class SearchContainer extends Container<IState> {
         key.toLowerCase().includes(changedQuery.toLowerCase()),
       )
 
-      const suggestions = orderBy(
-        map(dictionaryFilteredByQuery, (value, key) => ({
-          text: key,
-          example: value[0].example,
-          definition: value[0].definition,
-          start: key.toLowerCase().indexOf(changedQuery.toLowerCase()),
-        })),
+      const suggestions = map(dictionaryFilteredByQuery, (value, key) => ({
+        text: key,
+        definitions: value,
+        start: key.toLowerCase().indexOf(changedQuery.toLowerCase()),
+      }))
+      const orderedSuggestions = uniqBy(
+        orderBy(suggestions, ({ text }) => text),
         ({ text }) => text,
       )
+
       this.setState({
-        suggestions,
+        suggestions: orderedSuggestions,
       })
     } else if (changedQuery === '') {
       this.setState({ suggestions: [] })
     }
 
-    this.setState({ query: changedQuery })
+    this.setState({ query: changedQuery, selectedWord: undefined })
   }
   fetchDictionary = async () => {
     this.setState({ isFetching: true })
@@ -72,32 +74,21 @@ const Search = () => (
             />
           </div>
           <div>
-            {state.suggestions &&
-              state.suggestions.length > 1 &&
+            {!state.selectedWord &&
+              state.suggestions &&
               state.suggestions.slice(0, 15).map((v) => (
                 <div
-                  title={v.example}
                   key={v.text}
                   className={'suggestion'}
                   style={{ cursor: 'pointer', paddingBottom: 4, paddingTop: 3 }}
                   onClick={() => onChange(v.text)}
                 >
-                  {v.text.substring(0, v.start)}
-
-                  <strong>{state.query}</strong>
-                  {v.text.substring(v.start + state.query.length)}
-                  {' : '}
-                  <em>{v.definition}</em>
+                  <DefinitionPage definitions={v.definitions} text={v.text}>
+                    {v.text.substring(0, v.start)}
+                    <strong>{state.query}</strong>
+                    {v.text.substring(v.start + state.query.length)}
+                  </DefinitionPage>
                 </div>
-              ))}
-            {state.suggestions &&
-              state.dictionary &&
-              state.suggestions.length === 1 &&
-              state.suggestions.map(({ text }) => (
-                <DefinitionPage
-                  definitions={state.dictionary[text]}
-                  text={text}
-                />
               ))}
           </div>
         </div>

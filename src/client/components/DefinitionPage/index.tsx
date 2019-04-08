@@ -4,12 +4,23 @@ import { Definition } from '../../../model'
 const DefinitionPage = ({
   definitions,
   text,
+  children,
 }: {
   definitions: Definition[]
   text: string
+  children?: any
 }) => (
-  <div style={{ padding: '4px 13px' }}>
-    <h5>{text}</h5>
+  <div style={{ padding: '4px 0' }}>
+    <div
+      style={{
+        display: 'flex',
+        marginBottom: 4,
+      }}
+    >
+      <h5 style={{ marginTop: 5, marginBottom: 5, marginRight: 10 }}>
+        {children || text}
+      </h5>
+    </div>
     {definitions.map(({ definition, example }, i) => (
       <div
         style={{
@@ -17,10 +28,13 @@ const DefinitionPage = ({
         }}
         key={i}
       >
-        <h6 style={{ paddingRight: 5 }}>{`${i + 1}.   `}</h6>
+        {definitions.length > 1 && (
+          <h6 style={{ paddingRight: 5 }}>{`${i + 1}.   `}</h6>
+        )}
         <div>
-          <h6>{definition}</h6>
-          <em style={{ color: 'gray' }}>{example}</em>
+          <em>{definition}</em>
+          <br />
+          {example && <span style={{ color: 'gray' }}>{`"${example}"`}</span>}
         </div>
       </div>
     ))}
