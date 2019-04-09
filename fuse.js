@@ -11,6 +11,8 @@ const {
   EnvPlugin,
 } = require('fuse-box')
 const { context, task, src } = require('fuse-box/sparky')
+const fs = require('fs')
+const { definitions } = require('@vntk/dictionary')
 
 context(
   class {
@@ -172,6 +174,8 @@ task('copy:css', async (context) => {
 })
 
 task('copy:definitions', async (context) => {
+  fs.writeFileSync('./definitions.json', JSON.stringify(definitions), 'utf-8')
+
   await src('definitions.json', { base: '/' })
     .dest(`build/client`)
     .exec()
