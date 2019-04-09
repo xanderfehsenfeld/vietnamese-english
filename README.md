@@ -12,4 +12,8 @@ A website to search vietnamese
 
 ## Build
 
-`npm run build`
+`npm run build` will bundle the files into the `build` directory.
+
+## Troubleshoot the fusebox.js bundler by removing the cache
+
+Bust fusebox's cache by removing the .fusebox folder.
