@@ -171,13 +171,19 @@ task('copy:css', async (context) => {
     .exec()
 })
 
+task('copy:definitions', async (context) => {
+  await src('definitions.json', { base: '/' })
+    .dest(`build/client`)
+    .exec()
+})
+
 task('copy:favicon', async (context) => {
   await src('favicon/*', { base: '/' })
     .dest('build/client')
     .exec()
 })
 
-task('copy-assets', ['&copy:css', '&copy:favicon'])
+task('copy-assets', ['&copy:css', '&copy:favicon', '&copy:definitions'])
 
 task('watch:html', (context) => {
   const fuse = context.getConfigForClient()

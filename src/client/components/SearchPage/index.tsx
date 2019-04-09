@@ -50,7 +50,7 @@ class SearchContainer extends Container<IState> {
   fetchDictionary = async () => {
     this.setState({ isFetching: true })
 
-    const dictionary: Dictionary = (await axios.get('/dictionary')).data
+    const dictionary: Dictionary = (await axios.get('/definitions.json')).data
     this.setState({ dictionary, isFetching: false })
   }
 }
