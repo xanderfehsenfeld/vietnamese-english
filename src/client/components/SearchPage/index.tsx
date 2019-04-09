@@ -19,31 +19,41 @@ interface IState {
   selectedWord?: string
 }
 
+const removeAccents = (str: string) =>
+  str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+
 class SearchContainer extends Container<IState> {
   state: IState = { query: '', isFetching: false }
+
   onChange = (changedQuery: string) => {
+    const formattedQuery = changedQuery.toLowerCase()
     const { dictionary } = this.state
-    if (dictionary && changedQuery) {
-      const dictionaryFilteredByQuery = pickBy(dictionary, (value, key) =>
-        key
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .includes(changedQuery.toLowerCase()),
+    if (dictionary && formattedQuery) {
+      const dictionaryFilteredByQuery = pickBy(
+        dictionary,
+        (value, key) =>
+          key.toLowerCase().includes(formattedQuery) ||
+          removeAccents(key.toLowerCase()).includes(formattedQuery),
       )
 
       const suggestions = map(dictionaryFilteredByQuery, (value, key) => ({
         text: key,
         definitions: value,
-        start: key
-          .toLowerCase()
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .indexOf(changedQuery.toLowerCase()),
+        start: Math.max(
+          key
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .indexOf(formattedQuery),
+          key
+            .toLowerCase()
+
+            .indexOf(formattedQuery),
+        ),
       }))
       const orderedSuggestions = uniqBy(
-        orderBy(suggestions, ({ text }) => text),
-        ({ text }) => text,
+        orderBy(suggestions, ({ text }) => text.length),
+        ({ text }) => text.toLowerCase(),
       )
 
       this.setState({
