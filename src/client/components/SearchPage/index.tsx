@@ -25,13 +25,21 @@ class SearchContainer extends Container<IState> {
     const { dictionary } = this.state
     if (dictionary && changedQuery) {
       const dictionaryFilteredByQuery = pickBy(dictionary, (value, key) =>
-        key.toLowerCase().includes(changedQuery.toLowerCase()),
+        key
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .includes(changedQuery.toLowerCase()),
       )
 
       const suggestions = map(dictionaryFilteredByQuery, (value, key) => ({
         text: key,
         definitions: value,
-        start: key.toLowerCase().indexOf(changedQuery.toLowerCase()),
+        start: key
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .indexOf(changedQuery.toLowerCase()),
       }))
       const orderedSuggestions = uniqBy(
         orderBy(suggestions, ({ text }) => text),
@@ -85,7 +93,9 @@ const Search = () => (
                 >
                   <DefinitionPage definitions={v.definitions} text={v.text}>
                     {v.text.substring(0, v.start)}
-                    <strong>{state.query}</strong>
+                    <strong>
+                      {v.text.substring(v.start, v.start + state.query.length)}
+                    </strong>
                     {v.text.substring(v.start + state.query.length)}
                   </DefinitionPage>
                 </div>
