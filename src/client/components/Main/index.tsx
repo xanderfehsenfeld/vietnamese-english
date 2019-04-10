@@ -10,10 +10,20 @@ const Main = () => (
   <UnstatedProvider>
     <Router>
       <Header />
-      <Switch>
-        <Route path={'/vocab'} render={Vocabulary} />
-        <Route render={Search} />
-      </Switch>
+      <div className={'container fill'}>
+        <div className={'fill row'}>
+          <div className={'col-7'}>
+            <Search />
+          </div>
+
+          <div
+            className={'col-5'}
+            style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
+          >
+            <Vocabulary />
+          </div>
+        </div>
+      </div>
     </Router>
   </UnstatedProvider>
 )

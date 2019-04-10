@@ -34,20 +34,21 @@ app.use(passport.session())
 app.use(bodyParser.json())
 app.use(oauth2Routes)
 
-app.get('/user', authRequired, (req, res) => {
-  res
-    .status(200)
-    .send(req.user)
-    .end()
-})
-
 const datastore = new Datastore({
   projectId: 'partner-credit-console-rebuild',
 })
+app.get('/state', authRequired, async (req, res) => {
+  const query = datastore.createQuery('state')
+  const state = (await datastore.runQuery(query))[0]
+  res
+    .status(200)
+    .send(state)
+    .end()
+})
 
-app.post('/persistClientState', authRequired, async (req, res) => {
+app.post('/state', authRequired, async (req, res) => {
   await datastore.upsert({
-    key: datastore.key(['clientState', req.user.id]),
+    key: datastore.key(['state', req.user.id]),
     data: JSON.stringify(req.body),
   })
   res

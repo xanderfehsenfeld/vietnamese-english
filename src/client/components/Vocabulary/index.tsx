@@ -1,17 +1,38 @@
-import { Subscribe } from 'unstated'
+import { Subscribe, Container } from 'unstated'
 import React from 'react'
 import DefinitionPage from '../DefinitionPage'
-import { SearchContainer as VocabularyContainer } from '../SearchPage'
+import { SearchContainer } from '../SearchPage'
+
+interface IState {
+  savedWords: string[]
+}
+export class VocabularyContainer extends Container<IState> {
+  state: IState = { savedWords: [] }
+  // persistState = async (state: any) =>
+  //   await axios.post('/persistClientState', state)
+
+  addWordToSavedWords = async (word: string) => {
+    const newSavedWords = this.state.savedWords.concat([word])
+    this.setState({ savedWords: newSavedWords })
+    //await this.persistState(newSavedWords)
+  }
+
+  removeWord = (word: string) => {
+    const newSavedWords = this.state.savedWords.filter((w) => w !== word)
+    this.setState({ savedWords: newSavedWords })
+  }
+}
 
 const Vocabulary = () => (
-  <Subscribe to={[VocabularyContainer]}>
-    {({ state, fetchDictionary }: VocabularyContainer) => {
-      if (!state.isFetching && !state.dictionary) {
-        fetchDictionary()
-      }
-      const { savedWords, dictionary } = state
+  <Subscribe to={[VocabularyContainer, SearchContainer]}>
+    {(
+      { state }: VocabularyContainer,
+      { state: stateWithDictionary }: SearchContainer,
+    ) => {
+      const { savedWords } = state
+      const { dictionary } = stateWithDictionary
       return (
-        <div className={'container'}>
+        <div style={{ height: '100%' }}>
           <h3>Vocabulary</h3>
           <div>
             {dictionary &&

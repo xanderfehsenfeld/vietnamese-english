@@ -8,7 +8,6 @@ import DefinitionPage from '../DefinitionPage'
 
 interface IState {
   query: string
-  savedWords: string[]
   suggestions?: {
     text: string
 
@@ -24,7 +23,7 @@ const removeAccents = (str: string) =>
   str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export class SearchContainer extends Container<IState> {
-  state: IState = { query: '', isFetching: false, savedWords: [] }
+  state: IState = { query: '', isFetching: false }
   persistState = async (state: any) =>
     await axios.post('/persistClientState', state)
   onChange = (changedQuery: string) => {
@@ -73,34 +72,26 @@ export class SearchContainer extends Container<IState> {
     const dictionary: Dictionary = (await axios.get('/definitions.json')).data
     this.setState({ dictionary, isFetching: false })
   }
-
-  addWordToSavedWords = async (word: string) => {
-    const newSavedWords = this.state.savedWords.concat([word])
-    this.setState({ savedWords: newSavedWords })
-    await this.persistState(newSavedWords)
-  }
 }
 
 const Search = () => (
   <Subscribe to={[SearchContainer]}>
-    {({
-      state,
-      onChange,
-      fetchDictionary,
-      addWordToSavedWords,
-    }: SearchContainer) => {
+    {({ state, onChange, fetchDictionary }: SearchContainer) => {
       if (!state.isFetching && !state.dictionary) {
         fetchDictionary()
       }
       return (
-        <div className={'container'}>
+        <div>
           <h3>Search</h3>
 
           <div className="md-form mt-0">
             <input
               className="form-control"
               type="text"
-              placeholder="Search vietnamese words..."
+              disabled={state.isFetching}
+              placeholder={
+                state.isFetching ? 'Fetching...' : 'Search vietnamese words...'
+              }
               aria-label="Search"
               onChange={(e) => onChange(e.target.value)}
               value={state.query}
@@ -116,7 +107,6 @@ const Search = () => (
                   style={{ cursor: 'pointer', paddingBottom: 4, paddingTop: 3 }}
                   onClick={() => {
                     onChange(v.text)
-                    addWordToSavedWords(v.text)
                   }}
                 >
                   <DefinitionPage definitions={v.definitions} text={v.text}>
