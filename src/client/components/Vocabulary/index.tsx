@@ -74,7 +74,6 @@ const Vocabulary = () => (
       } = state
 
       if (!isFetchingState && !didInitialFetch) {
-        fetchState()
         return null
       } else if (isFetchingState) {
         return (

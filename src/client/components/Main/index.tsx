@@ -28,9 +28,18 @@ const SearchVocabularyCompositeView = () => (
 const Main = () => (
   <UnstatedProvider>
     <Subscribe to={[SearchContainer, VocabularyContainer]}>
-      {({ state, fetchDictionary }: SearchContainer) => {
+      {(
+        { state, fetchDictionary }: SearchContainer,
+        { state: vocabularyState, fetchState }: VocabularyContainer,
+      ) => {
         if (!state.isFetching && !state.dictionary) {
           fetchDictionary()
+        }
+        if (
+          !vocabularyState.isFetchingState &&
+          !vocabularyState.didInitialFetch
+        ) {
+          fetchState()
         }
         return null
       }}
