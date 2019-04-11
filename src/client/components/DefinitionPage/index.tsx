@@ -10,12 +10,14 @@ const DefinitionPage = ({
   children,
   showDefinition = true,
   showExample = true,
+  isSelected,
 }: {
   definitions: Definition[]
   text: string
   children?: any
   showDefinition?: boolean
   showExample?: boolean
+  isSelected?: boolean
 }) => (
   <Subscribe to={[VocabularyContainer]}>
     {({ addWordToSavedWords, state, removeWord }: VocabularyContainer) => {
@@ -62,7 +64,7 @@ const DefinitionPage = ({
               textAlign: 'right',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'flex-start',
+              justifyContent: 'space-between',
               alignItems: 'flex-end',
             }}
           >
@@ -87,6 +89,11 @@ const DefinitionPage = ({
                 }}
               >
                 {'Add To Vocab'}
+              </button>
+            )}
+            {isSelected && (
+              <button disabled className={'btn btn-success'}>
+                Selected
               </button>
             )}
           </div>

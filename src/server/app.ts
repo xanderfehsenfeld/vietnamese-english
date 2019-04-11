@@ -42,8 +42,6 @@ app.get('/state', authRequired, async (req, res) => {
     .createQuery('state')
     .filter('__key__', '=', datastore.key(['state', req.user.id]))
   const state = (await datastore.runQuery(query))[0]
-
-  console.log(state)
   res
     .status(200)
     .send(state)

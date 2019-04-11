@@ -38,6 +38,7 @@ const Header = () => (
             <span className="p-2 text-dark">
               <NavLink to={'/vocabulary'}>Vocabulary</NavLink>
             </span>
+
             <span className="p-2 text-dark ">
               {state.displayName && `${state.displayName.split(' ')[0]}`}
             </span>

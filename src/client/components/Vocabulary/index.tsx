@@ -1,5 +1,5 @@
 import { Subscribe, Container } from 'unstated'
-import React from 'react'
+import * as React from 'react'
 import DefinitionPage from '../DefinitionPage'
 import { SearchContainer } from '../SearchPage'
 import axios from 'axios'
@@ -9,12 +9,20 @@ interface IState {
   savedWords: string[]
   isFetchingState: boolean
   didInitialFetch: boolean
+  selectedWord?: string
 }
 export class VocabularyContainer extends Container<IState> {
   state: IState = {
     savedWords: [],
     isFetchingState: false,
     didInitialFetch: false,
+  }
+  selectWord = (word: string) => {
+    if (word === this.state.selectedWord) {
+      this.setState({ selectedWord: undefined })
+    } else {
+      this.setState({ selectedWord: word })
+    }
   }
   persistState = async (state: any) => await axios.post('/state', state)
   fetchState = async () => {
@@ -54,10 +62,15 @@ export class VocabularyContainer extends Container<IState> {
 const Vocabulary = () => (
   <Subscribe to={[VocabularyContainer, SearchContainer]}>
     {(
-      { state, fetchState }: VocabularyContainer,
+      { state, fetchState, selectWord }: VocabularyContainer,
       { state: stateWithDictionary }: SearchContainer,
     ) => {
-      const { savedWords, isFetchingState, didInitialFetch } = state
+      const {
+        savedWords,
+        isFetchingState,
+        didInitialFetch,
+        selectedWord,
+      } = state
 
       if (!isFetchingState && !didInitialFetch) {
         fetchState()
@@ -90,8 +103,13 @@ const Vocabulary = () => (
                         paddingBottom: 4,
                         paddingTop: 3,
                       }}
+                      onClick={() => selectWord(v.text)}
                     >
-                      <DefinitionPage definitions={v.definitions} text={v.text}>
+                      <DefinitionPage
+                        definitions={v.definitions}
+                        text={v.text}
+                        isSelected={selectedWord === v.text}
+                      >
                         {v.text}
                       </DefinitionPage>
                     </div>

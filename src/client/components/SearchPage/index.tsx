@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react'
 import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
@@ -92,16 +92,8 @@ export class SearchContainer extends Container<IState> {
 
 const Search = () => (
   <Subscribe to={[SearchContainer, VocabularyContainer]}>
-    {({
-      state,
-      onChange,
-      fetchDictionary,
-      toggleShowExample,
-    }: SearchContainer) => {
+    {({ state, onChange, toggleShowExample }: SearchContainer) => {
       const { showExample } = state
-      if (!state.isFetching && !state.dictionary) {
-        fetchDictionary()
-      }
       return (
         <div>
           <h3>Search</h3>

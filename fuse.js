@@ -55,6 +55,7 @@ context(
         sourceMaps: !this.isProduction,
         cache: true,
         useTypescriptCompiler: true,
+        allowSyntheticDefaultImports: true,
         plugins: [
           EnvPlugin({
             NODE_ENV: this.isProduction ? 'production' : 'development',
