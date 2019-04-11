@@ -2,7 +2,6 @@
   "name": "vietnamese-english",
   "description": "A personal website to search vietnamese words.",
   "version": "0.0.1",
-  "private": true,
   "license": "MIT",
   "author": "Alexander Fehsenfeld",
   "engines": {
@@ -11,8 +10,8 @@
   "scripts": {
     "dev": "node ./node_modules/nodemon/bin/nodemon.js --inspect=9229 fuse.js --watch fuse.js",
     "build": "node fuse.js build",
-    "deploy": "rm -rf .fusebox/ && npm run build && gcloud app deploy -q && gcloud app browse",
-    "start": "node build/server/bundle.js"
+    "deploy": "sh deploy.sh",
+    "start": "node dist-prod/server/bundle.js"
   },
   "dependencies": {
     "@google-cloud/connect-datastore": "^2.0.2",
@@ -32,11 +31,11 @@
     "passport": "^0.4.0",
     "passport-google-oauth20": "^2.0.0",
     "prop-types": "^15.7.2",
-    "react": "^16.8.4",
+    "react": "^16.8.6",
     "react-d3-graph": "^2.0.1",
     "react-data-grid": "^6.1.0-0",
     "react-data-grid-addons": "^6.1.0-0",
-    "react-dom": "^16.8.4",
+    "react-dom": "^16.8.6",
     "react-router": "^5.0.0",
     "react-router-dom": "^5.0.0",
     "redux": "^4.0.1",

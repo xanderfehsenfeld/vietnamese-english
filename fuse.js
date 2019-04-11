@@ -14,17 +14,25 @@ const { context, task, src } = require('fuse-box/sparky')
 const fs = require('fs')
 const { definitions } = require('@vntk/dictionary')
 
+const distFolderName = (isProduction) => {
+  if (isProduction) {
+    return 'dist-prod'
+  }
+  return 'dist-dev'
+}
+
 context(
   class {
     getConfigForServer() {
       return FuseBox.init({
         tsConfig: './tsconfig.json',
         homeDir: 'src/server/',
-        output: 'build/$name.js',
+        output: `${distFolderName(this.isProduction)}/$name.js`,
         target: 'server@es7',
         plugins: [
           EnvPlugin({
             GOOGLE_CLOUD_PROJECT: 'vietnamese-english',
+            NODE_ENV: this.isProduction ? 'production' : 'development',
           }),
           ['node_modules/**.json', JSONPlugin()],
         ],
@@ -55,7 +63,7 @@ context(
           clearTerminalOnBundle: true,
         },
         homeDir: 'src/client',
-        output: `build/client/$name.js`,
+        output: `${distFolderName(this.isProduction)}/client/$name.js`,
         target: 'browser@es5',
         sourceMaps: !this.isProduction,
         cache: true,
@@ -169,66 +177,52 @@ const nodeModulesCSSHandler = [
 ]
 
 task('clean', (context) =>
-  src('build/client')
-    .clean('build/client')
+  src(distFolderName(context.isProduction))
+    .clean(distFolderName(context.isProduction))
     .exec(),
 )
-
-task('copy:css', async (context) => {
-  await src('**/**.**', { base: '/src/css' })
-    .dest(`build/client/css`)
-    .exec()
-})
 
 task('copy:definitions', async (context) => {
   fs.writeFileSync('./definitions.json', JSON.stringify(definitions), 'utf-8')
 
   await src('definitions.json', { base: '/' })
-    .dest(`build/client`)
+    .dest(`${distFolderName(context.isProduction)}/client`)
     .exec()
 })
 
 task('copy:favicon', async (context) => {
   await src('favicon/*', { base: '/' })
-    .dest('build/client')
+    .dest(`${distFolderName(context.isProduction)}/client`)
     .exec()
 })
 
-task('copy-assets', ['&copy:css', '&copy:favicon', '&copy:definitions'])
+task('copy-assets', ['&copy:favicon', '&copy:definitions'])
 
 task('watch:html', (context) => {
   const fuse = context.getConfigForClient()
   return Sparky.watch(['src/client/index.html']).completed(() => {
     src('index.html', { base: './src/client/' })
-      .dest('build/client')
+      .dest(`${distFolderName(context.isProduction)}/client`)
       .exec()
 
     fuse.sendPageReload()
   })
 })
 
-task(
-  'watch-client',
-  ['clean', 'copy-assets', 'watch:html'],
-  async (context) => {
-    const fuse = context.getConfigForClient()
-    fuse.dev({
-      port: 4444,
-    })
-    context.createBundleForClient(fuse)
-    await fuse.run()
-  },
-)
+task('watch-client', ['copy-assets', 'watch:html'], async (context) => {
+  const fuse = context.getConfigForClient()
+  fuse.dev({
+    port: 4444,
+  })
+  context.createBundleForClient(fuse)
+  await fuse.run()
+})
 
-task(
-  'build-client',
-  ['set-prod-env', 'clean', 'copy-assets'],
-  async (context) => {
-    const fuse = context.getConfigForClient()
-    context.createBundleForClient(fuse)
-    await fuse.run()
-  },
-)
+task('build-client', ['set-prod-env', 'copy-assets'], async (context) => {
+  const fuse = context.getConfigForClient()
+  context.createBundleForClient(fuse)
+  await fuse.run()
+})
 
 task('default', ['&watch-server', '&watch-client'])
-task('build', ['&build-server', '&build-client'])
+task('build', ['clean', 'build-server', 'build-client'])

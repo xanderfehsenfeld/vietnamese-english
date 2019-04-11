@@ -1,12 +1,14 @@
 google-cloud-sdk
 node_modules
 build
+dist-dev/
+dist-prod/
 .fusebox
 credentials.json
-personal-website-235416-8bbc335be6be.json
 src/server/config.ts
 deploy.sh
 rainbow.svg
 Rainbow.gif
 vietnamese-english-7671cb1a0c63.json
 definitions.json
+google-cloud-platform-service-account-key.json

@@ -66,7 +66,15 @@ app.get('/user', authRequired, (req, res) => {
     .send(req.user)
     .end()
 })
-app.use('/', redirectToLoginIfUnauthorized, express.static('build/client'))
+app.use(
+  '/',
+  redirectToLoginIfUnauthorized,
+  express.static(
+    `${
+      process.env.NODE_ENV === 'production' ? 'dist-prod' : 'dist-dev'
+    }/client`,
+  ),
+)
 
 const PORT = process.env.PORT || 8080
 app.listen(PORT, () => {

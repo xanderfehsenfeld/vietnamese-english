@@ -1,10 +1,10 @@
 import * as React from 'react'
 import { Graph } from 'react-d3-graph'
-import { Subscribe } from 'unstated'
+import { Subscribe, Container } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { flatten } from 'lodash'
+import { flatten, uniqBy, uniq } from 'lodash'
 
 const SavedWordsView = ({
   savedWords,
@@ -122,82 +122,77 @@ const config = {
   },
 }
 
-const getConnectedNodesForWord = (
-  subword: string,
-  words: string[],
-  depth = 1,
-): { nodes: { id: string }[]; links: { source: string; target: string }[] } => {
-  const releventWords = words.filter(
-    (v) => v !== subword && v.split(' ').includes(subword),
+const getAdjacentWords = (
+  wordWithNoSpaces: string,
+  allWords: string[],
+  depth = 0,
+) => {
+  let adjacentWords = allWords.filter((w) =>
+    w.split(' ').includes(wordWithNoSpaces),
   )
-
-  // let deeperNodes = []
-  // let deeperLinks = []
-  // if (depth !== 0) {
-  //   const x = releventWords.map((v) => {
-  //     return {
-  //       id: v,
-  //       // ...v
-  //       //   .split(' ')
-  //       //   .map((v) => getConnectedNodesForWord(v, words, depth - 1)),
-  //     }
-  //   })
-  //   console.log(x)
-  // }
-
-  const nodes = releventWords.map((id) => ({ id, color: 'green' }))
-
-  const links = releventWords.map((id) => ({
-    source: subword,
-    target: id,
-    renderLabel: true,
-    label: subword,
-    labelProperty: 'label',
-  }))
-
-  return {
-    nodes,
-    links,
+  if (depth !== 0) {
+    adjacentWords = adjacentWords.concat(
+      flatten(
+        adjacentWords.map((v) => getAdjacentWords(v, allWords, depth - 1)),
+      ),
+    )
   }
+
+  return uniq(adjacentWords)
 }
 
-const generateDataForWord = (selectedWord: string, allWords: string[]) => {
-  const subwords = selectedWord.split(' ')
-  const neighborWords = subwords.map((word) => ({
-    id: word,
-    size: 900,
-    color: 'magenta',
-    symbolType: 'square',
-    highlightColor: 'forestgreen',
+interface GraphLink {
+  source: string
+  target: string
+}
+const filterUniqueLinks = (links: GraphLink[]) => {
+  const alreadySeen: { [key: string]: boolean } = {}
+
+  return uniqBy(links, ({ source, target }) => source + target).filter(
+    ({ source, target }) => {
+      const key = source + target
+      const reverse = target + source
+      if (alreadySeen[key] || alreadySeen[reverse]) {
+        return false
+      } else {
+        alreadySeen[key] = true
+        alreadySeen[reverse] = true
+        return true
+      }
+    },
+  )
+}
+
+const generateLinksAndNodes = (words: string[]) => {
+  let links: GraphLink[] = []
+  const nodes = words.map((v) => ({
+    id: v,
+    color: v.split(' ').length === 1 ? 'magenta' : 'green',
   }))
 
-  const links = neighborWords
-    .map(({ id }, i) => {
-      const next = neighborWords[i + 1]
-      if (next) {
-        return {
-          source: id,
-          target: next.id,
-        }
-      } else {
-        return undefined
-      }
-    })
-    .filter((v) => v)
+  words.forEach((word) => {
+    const subwords = word.split(' ')
 
-  const connectedWordsData = subwords.map((w) =>
-    getConnectedNodesForWord(w, allWords),
-  )
+    const otherWordsSharingSubwords = flatten(
+      subwords.map((sub) => {
+        const otherWordsWithSub: string[] = words.filter(
+          (target) => target === sub,
+        )
+        return otherWordsWithSub.map((otherWord) => ({
+          source: word,
+          target: otherWord,
+        }))
+      }),
+    ).filter(({ source, target }) => source !== target)
+    links = links.concat(otherWordsSharingSubwords)
+  })
+  const uniqueLinks = filterUniqueLinks(links)
 
-  const data = {
-    nodes: [
-      ...neighborWords,
-      ...flatten(connectedWordsData.map(({ nodes }) => nodes)),
-    ],
-    links: [...links, ...flatten(connectedWordsData.map(({ links }) => links))],
-  }
+  return { links: uniqueLinks, nodes }
+}
 
-  return data
+interface IState {
+  mode: 'Shallow' | 'Deep'
 }
 
 const WordGraph = () => {
@@ -211,10 +206,15 @@ const WordGraph = () => {
         const { savedWords } = vocabularyState
         if (dictionary) {
           const selectedWord = vocabularyState.selectedWord || 'méo xệch'
-          const data = generateDataForWord(
-            selectedWord,
-            Object.keys(dictionary),
+
+          const allWords = Object.keys(dictionary)
+
+          const adjacentWords = flatten(
+            selectedWord
+              .split(' ')
+              .map((x) => getAdjacentWords(x, allWords, 2)),
           )
+          const data = generateLinksAndNodes(adjacentWords)
 
           return (
             <div className={'fill row '}>
@@ -230,8 +230,16 @@ const WordGraph = () => {
               </div>
               <div
                 className={'col-md-7 '}
-                style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
+                style={{
+                  borderLeft: 'solid 1px rgb(222, 226, 230)',
+                  paddingTop: 5,
+                }}
               >
+                <div
+                  className="btn-group"
+                  role="group"
+                  aria-label="Basic example"
+                />
                 <Graph
                   key={selectedWord}
                   id="graph-id"
