@@ -93,8 +93,8 @@ const Vocabulary = () => (
                 savedWords &&
                 savedWords
                   .slice(0, 15)
+                  .reverse()
                   .map((v) => ({ text: v, definitions: dictionary[v] }))
-
                   .map((v) => (
                     <div
                       key={v.text}

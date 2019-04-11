@@ -149,6 +149,7 @@ const Search = () => (
                     definitions={v.definitions}
                     text={v.text}
                     showExample={showExample}
+                    showRemoveButton={false}
                   >
                     {v.text.substring(0, v.start)}
                     <strong>

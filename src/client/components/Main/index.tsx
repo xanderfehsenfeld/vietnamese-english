@@ -25,25 +25,6 @@ const SearchVocabularyCompositeView = () => (
   </div>
 )
 
-const VocabularyGraphCompositeView = () => (
-  <div className={'fill row '}>
-    <div className={'col-12 d-lg-none'}>
-      <Vocabulary />
-    </div>
-
-    <div className={'col-7 d-none d-lg-block'}>
-      <Vocabulary />
-    </div>
-
-    <div
-      className={'col-5 d-none d-lg-block'}
-      style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
-    >
-      <WordGraph />
-    </div>
-  </div>
-)
-
 const Main = () => (
   <UnstatedProvider>
     <Subscribe to={[SearchContainer, VocabularyContainer]}>
@@ -58,7 +39,8 @@ const Main = () => (
       <Header />
       <div className={'container fill'}>
         <Switch>
-          <Route render={VocabularyGraphCompositeView} path={'/vocabulary'} />
+          <Route render={Vocabulary} path={'/vocabulary'} />
+          <Route render={WordGraph} path={'/graph'} />
           <Route render={SearchVocabularyCompositeView} />
         </Switch>
       </div>

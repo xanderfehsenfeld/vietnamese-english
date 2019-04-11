@@ -38,7 +38,9 @@ const Header = () => (
             <span className="p-2 text-dark">
               <Link to={'/vocabulary'}>Vocabulary</Link>
             </span>
-
+            <span className="p-2 text-dark">
+              <Link to={'/graph'}>Graph</Link>
+            </span>
             <span className="p-2 text-dark ">
               {state.displayName && `${state.displayName.split(' ')[0]}`}
             </span>

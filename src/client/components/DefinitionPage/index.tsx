@@ -11,6 +11,7 @@ const DefinitionPage = ({
   showDefinition = true,
   showExample = true,
   isSelected,
+  showRemoveButton = true,
 }: {
   definitions: Definition[]
   text: string
@@ -18,6 +19,7 @@ const DefinitionPage = ({
   showDefinition?: boolean
   showExample?: boolean
   isSelected?: boolean
+  showRemoveButton?: boolean
 }) => (
   <Subscribe to={[VocabularyContainer]}>
     {({ addWordToSavedWords, state, removeWord }: VocabularyContainer) => {
@@ -68,7 +70,7 @@ const DefinitionPage = ({
               alignItems: 'flex-end',
             }}
           >
-            {wordIsSaved ? (
+            {wordIsSaved && showRemoveButton && (
               <button
                 className={`btn btn-danger`}
                 onClick={(e) => {
@@ -78,7 +80,20 @@ const DefinitionPage = ({
               >
                 {'Remove'}
               </button>
-            ) : (
+            )}
+
+            {wordIsSaved && !showRemoveButton && (
+              <button
+                className={`btn 
+                            btn-secondary
+                          `}
+                disabled={true}
+              >
+                {'Added'}
+              </button>
+            )}
+
+            {!wordIsSaved && (
               <button
                 className={`btn 
                   btn-secondary
