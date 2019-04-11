@@ -8,14 +8,18 @@ const DefinitionPage = ({
   definitions,
   text,
   children,
+  showDefinition = true,
+  showExample = true,
 }: {
   definitions: Definition[]
   text: string
   children?: any
+  showDefinition?: boolean
+  showExample?: boolean
 }) => (
   <Subscribe to={[VocabularyContainer]}>
     {({ addWordToSavedWords, state, removeWord }: VocabularyContainer) => {
-      const { savedWords, showDefinition, showExample } = state
+      const { savedWords } = state
 
       const wordIsSaved = savedWords.includes(text)
       return (

@@ -3,20 +3,23 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary, Definition } from 'model'
-import { pickBy, map, orderBy, uniqBy } from 'lodash'
+import { pickBy, map, orderBy, uniqBy, flatten, uniq } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 import { VocabularyContainer } from '../Vocabulary'
 
 interface IState {
   query: string
-  suggestions?: {
+  subwordSuggestions?: {
     text: string
 
     definitions: Definition[]
     start: number
   }[]
+
+  showExample: boolean
   isFetching: boolean
   dictionary?: Dictionary
+  uniqueSubwords?: string[]
   selectedWord?: string
 }
 
@@ -24,9 +27,16 @@ const removeAccents = (str: string) =>
   str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
 export class SearchContainer extends Container<IState> {
-  state: IState = { query: '', isFetching: false }
-  persistState = async (state: any) =>
-    await axios.post('/persistClientState', state)
+  state: IState = {
+    query: '',
+    isFetching: false,
+    showExample: true,
+  }
+
+  toggleShowExample = () => {
+    this.setState({ showExample: !this.state.showExample })
+  }
+
   onChange = (changedQuery: string) => {
     const formattedQuery = changedQuery.toLowerCase()
     const { dictionary } = this.state
@@ -59,10 +69,10 @@ export class SearchContainer extends Container<IState> {
       )
 
       this.setState({
-        suggestions: orderedSuggestions,
+        subwordSuggestions: orderedSuggestions,
       })
     } else if (changedQuery === '') {
-      this.setState({ suggestions: [] })
+      this.setState({ subwordSuggestions: [] })
     }
 
     this.setState({ query: changedQuery, selectedWord: undefined })
@@ -71,21 +81,24 @@ export class SearchContainer extends Container<IState> {
     this.setState({ isFetching: true })
 
     const dictionary: Dictionary = (await axios.get('/definitions.json')).data
-    this.setState({ dictionary, isFetching: false })
+
+    const uniqueSubwords = uniq(
+      Object.keys(dictionary).map((v) => v.split(' ')[0]),
+    )
+
+    this.setState({ dictionary, uniqueSubwords, isFetching: false })
   }
 }
 
 const Search = () => (
   <Subscribe to={[SearchContainer, VocabularyContainer]}>
-    {(
-      { state, onChange, fetchDictionary }: SearchContainer,
-      {
-        state: vocabState,
-        toggleShowDefinition,
-        toggleShowExample,
-      }: VocabularyContainer,
-    ) => {
-      const { savedWords, showDefinition, showExample } = vocabState
+    {({
+      state,
+      onChange,
+      fetchDictionary,
+      toggleShowExample,
+    }: SearchContainer) => {
+      const { showExample } = state
       if (!state.isFetching && !state.dictionary) {
         fetchDictionary()
       }
@@ -107,58 +120,52 @@ const Search = () => (
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <input
-              style={{ marginTop: 10 }}
-              checked={showDefinition}
-              data-id={'t'}
-              onChange={toggleShowDefinition}
-              type={'checkbox'}
-            />
-            <label data-for={'t'} style={{ margin: 5 }}>
-              show definition
-            </label>
-            <input
-              onChange={toggleShowExample}
-              style={{ marginTop: 10, marginLeft: 20 }}
-              type={'checkbox'}
-              data-checked={showExample}
-              data-id={'t'}
-            />
-            <label data-for={'t'} style={{ margin: 5 }}>
-              show example
-            </label>
+            {state.subwordSuggestions && state.subwordSuggestions.length && (
+              <React.Fragment>
+                <input
+                  style={{ marginTop: 10 }}
+                  checked={showExample}
+                  data-id={'t'}
+                  onChange={toggleShowExample}
+                  type={'checkbox'}
+                />
+
+                <label data-for={'t'} style={{ margin: 5 }}>
+                  show example
+                </label>
+              </React.Fragment>
+            )}
           </div>
           <div>
             {!state.selectedWord &&
-              state.suggestions &&
-              state.suggestions
-                .filter((v) => !savedWords.includes(v.text))
-                .slice(0, 15)
-                .map((v) => (
-                  <div
-                    key={v.text}
-                    className={'suggestion'}
-                    style={{
-                      cursor: 'pointer',
-                      paddingBottom: 4,
-                      paddingTop: 3,
-                    }}
-                    onClick={() => {
-                      onChange(v.text)
-                    }}
+              state.subwordSuggestions &&
+              state.subwordSuggestions.slice(0, 15).map((v) => (
+                <div
+                  key={v.text}
+                  className={'suggestion'}
+                  style={{
+                    cursor: 'pointer',
+                    paddingBottom: 4,
+                    paddingTop: 3,
+                  }}
+                  onClick={() => {
+                    onChange(v.text)
+                  }}
+                  title={'click to refine search'}
+                >
+                  <DefinitionPage
+                    definitions={v.definitions}
+                    text={v.text}
+                    showExample={showExample}
                   >
-                    <DefinitionPage definitions={v.definitions} text={v.text}>
-                      {v.text.substring(0, v.start)}
-                      <strong>
-                        {v.text.substring(
-                          v.start,
-                          v.start + state.query.length,
-                        )}
-                      </strong>
-                      {v.text.substring(v.start + state.query.length)}
-                    </DefinitionPage>
-                  </div>
-                ))}
+                    {v.text.substring(0, v.start)}
+                    <strong>
+                      {v.text.substring(v.start, v.start + state.query.length)}
+                    </strong>
+                    {v.text.substring(v.start + state.query.length)}
+                  </DefinitionPage>
+                </div>
+              ))}
           </div>
         </div>
       )

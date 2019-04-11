@@ -36,9 +36,9 @@ const Header = () => (
               <NavLink to={'/'}>Search</NavLink>
             </span>
             <span className="p-2 text-dark">
-              <NavLink to={'/vocab'}>Vocabulary</NavLink>
+              <NavLink to={'/vocabulary'}>Vocabulary</NavLink>
             </span>
-            <span className="p-2 text-dark">
+            <span className="p-2 text-dark ">
               {state.displayName && `${state.displayName.split(' ')[0]}`}
             </span>
           </nav>

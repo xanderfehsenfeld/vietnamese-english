@@ -35,11 +35,15 @@ app.use(bodyParser.json())
 app.use(oauth2Routes)
 
 const datastore = new Datastore({
-  projectId: 'partner-credit-console-rebuild',
+  projectId: 'vietnamese-english',
 })
 app.get('/state', authRequired, async (req, res) => {
-  const query = datastore.createQuery('state')
+  const query = datastore
+    .createQuery('state')
+    .filter('__key__', '=', datastore.key(['state', req.user.id]))
   const state = (await datastore.runQuery(query))[0]
+
+  console.log(state)
   res
     .status(200)
     .send(state)
@@ -51,12 +55,19 @@ app.post('/state', authRequired, async (req, res) => {
     key: datastore.key(['state', req.user.id]),
     data: JSON.stringify(req.body),
   })
+
   res
     .status(201)
     .send('201')
     .end()
 })
 
+app.get('/user', authRequired, (req, res) => {
+  res
+    .status(200)
+    .send(req.user)
+    .end()
+})
 app.use('/', redirectToLoginIfUnauthorized, express.static('build/client'))
 
 const PORT = process.env.PORT || 8080
