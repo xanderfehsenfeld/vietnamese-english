@@ -5,11 +5,20 @@ import { SearchContainer } from '../SearchPage'
 
 interface IState {
   savedWords: string[]
+  showDefinition: boolean
+  showExample: boolean
 }
 export class VocabularyContainer extends Container<IState> {
-  state: IState = { savedWords: [] }
+  state: IState = { savedWords: [], showDefinition: true, showExample: false }
   // persistState = async (state: any) =>
   //   await axios.post('/persistClientState', state)
+
+  toggleShowDefinition = () => {
+    this.setState({ showDefinition: !this.state.showDefinition })
+  }
+  toggleShowExample = () => {
+    this.setState({ showExample: !this.state.showExample })
+  }
 
   addWordToSavedWords = async (word: string) => {
     const newSavedWords = this.state.savedWords.concat([word])

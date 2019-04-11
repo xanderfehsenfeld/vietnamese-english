@@ -11,13 +11,17 @@ const Main = () => (
     <Router>
       <Header />
       <div className={'container fill'}>
-        <div className={'fill row'}>
-          <div className={'col-7'}>
+        <div className={'fill row '}>
+          <div className={'col-12 d-lg-none'}>
+            <Search />
+          </div>
+
+          <div className={'col-7 d-none d-lg-block'}>
             <Search />
           </div>
 
           <div
-            className={'col-5'}
+            className={'col-5 d-none d-lg-block'}
             style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
           >
             <Vocabulary />

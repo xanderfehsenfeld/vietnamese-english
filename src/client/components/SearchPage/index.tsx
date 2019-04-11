@@ -5,6 +5,7 @@ import axios from 'axios'
 import { Dictionary, Definition } from 'model'
 import { pickBy, map, orderBy, uniqBy } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
+import { VocabularyContainer } from '../Vocabulary'
 
 interface IState {
   query: string
@@ -75,8 +76,16 @@ export class SearchContainer extends Container<IState> {
 }
 
 const Search = () => (
-  <Subscribe to={[SearchContainer]}>
-    {({ state, onChange, fetchDictionary }: SearchContainer) => {
+  <Subscribe to={[SearchContainer, VocabularyContainer]}>
+    {(
+      { state, onChange, fetchDictionary }: SearchContainer,
+      {
+        state: vocabState,
+        toggleShowDefinition,
+        toggleShowExample,
+      }: VocabularyContainer,
+    ) => {
+      const { savedWords, showDefinition, showExample } = vocabState
       if (!state.isFetching && !state.dictionary) {
         fetchDictionary()
       }
@@ -97,27 +106,59 @@ const Search = () => (
               value={state.query}
             />
           </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <input
+              style={{ marginTop: 10 }}
+              checked={showDefinition}
+              data-id={'t'}
+              onChange={toggleShowDefinition}
+              type={'checkbox'}
+            />
+            <label data-for={'t'} style={{ margin: 5 }}>
+              show definition
+            </label>
+            <input
+              onChange={toggleShowExample}
+              style={{ marginTop: 10, marginLeft: 20 }}
+              type={'checkbox'}
+              data-checked={showExample}
+              data-id={'t'}
+            />
+            <label data-for={'t'} style={{ margin: 5 }}>
+              show example
+            </label>
+          </div>
           <div>
             {!state.selectedWord &&
               state.suggestions &&
-              state.suggestions.slice(0, 15).map((v) => (
-                <div
-                  key={v.text}
-                  className={'suggestion'}
-                  style={{ cursor: 'pointer', paddingBottom: 4, paddingTop: 3 }}
-                  onClick={() => {
-                    onChange(v.text)
-                  }}
-                >
-                  <DefinitionPage definitions={v.definitions} text={v.text}>
-                    {v.text.substring(0, v.start)}
-                    <strong>
-                      {v.text.substring(v.start, v.start + state.query.length)}
-                    </strong>
-                    {v.text.substring(v.start + state.query.length)}
-                  </DefinitionPage>
-                </div>
-              ))}
+              state.suggestions
+                .filter((v) => !savedWords.includes(v.text))
+                .slice(0, 15)
+                .map((v) => (
+                  <div
+                    key={v.text}
+                    className={'suggestion'}
+                    style={{
+                      cursor: 'pointer',
+                      paddingBottom: 4,
+                      paddingTop: 3,
+                    }}
+                    onClick={() => {
+                      onChange(v.text)
+                    }}
+                  >
+                    <DefinitionPage definitions={v.definitions} text={v.text}>
+                      {v.text.substring(0, v.start)}
+                      <strong>
+                        {v.text.substring(
+                          v.start,
+                          v.start + state.query.length,
+                        )}
+                      </strong>
+                      {v.text.substring(v.start + state.query.length)}
+                    </DefinitionPage>
+                  </div>
+                ))}
           </div>
         </div>
       )

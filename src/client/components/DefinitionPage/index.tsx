@@ -15,7 +15,7 @@ const DefinitionPage = ({
 }) => (
   <Subscribe to={[VocabularyContainer]}>
     {({ addWordToSavedWords, state, removeWord }: VocabularyContainer) => {
-      const { savedWords } = state
+      const { savedWords, showDefinition, showExample } = state
 
       const wordIsSaved = savedWords.includes(text)
       return (
@@ -31,25 +31,26 @@ const DefinitionPage = ({
                 {children || text}
               </h5>
             </div>
-            {definitions.map(({ definition, example }, i) => (
-              <div
-                style={{
-                  display: 'flex',
-                }}
-                key={i}
-              >
-                {definitions.length > 1 && (
-                  <h6 style={{ paddingRight: 5 }}>{`${i + 1}.   `}</h6>
-                )}
-                <div>
-                  <em>{definition}</em>
-                  <br />
-                  {example && (
-                    <span style={{ color: 'gray' }}>{`"${example}"`}</span>
+            {showDefinition &&
+              definitions.map(({ definition, example }, i) => (
+                <div
+                  style={{
+                    display: 'flex',
+                  }}
+                  key={i}
+                >
+                  {definitions.length > 1 && (
+                    <h6 style={{ paddingRight: 5 }}>{`${i + 1}.   `}</h6>
                   )}
+                  <div>
+                    <em>{definition}</em>
+                    <br />
+                    {example && showExample && (
+                      <span style={{ color: 'gray' }}>{`"${example}"`}</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
           <div
             className={'col-4'}
@@ -61,16 +62,29 @@ const DefinitionPage = ({
               alignItems: 'flex-end',
             }}
           >
-            <button
-              className={'btn btn-secondary'}
-              value={'Add To Vocab'}
-              onClick={(e) => {
-                e.stopPropagation()
-                wordIsSaved ? removeWord(text) : addWordToSavedWords(text)
-              }}
-            >
-              {wordIsSaved ? 'Remove from vocab' : 'Add To Vocab'}
-            </button>
+            {wordIsSaved ? (
+              <button
+                className={`btn btn-danger`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  removeWord(text)
+                }}
+              >
+                {'Remove'}
+              </button>
+            ) : (
+              <button
+                className={`btn 
+                  btn-secondary
+                `}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  addWordToSavedWords(text)
+                }}
+              >
+                {'Add To Vocab'}
+              </button>
+            )}
           </div>
         </div>
       )
