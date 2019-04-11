@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Container, Subscribe } from 'unstated'
 import axios from 'axios'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 interface IState {
   startedInitialFetch: boolean
@@ -12,7 +12,7 @@ class HeaderContainer extends Container<IState> {
   state: IState = { startedInitialFetch: false }
   fetchUser = async () => {
     this.setState({ startedInitialFetch: true })
-    const { data } = await axios.get('/user')
+    const { data } = await axios.get('user')
     this.setState({ displayName: data.displayName })
   }
 }
@@ -33,10 +33,10 @@ const Header = () => (
           </h5>
           <nav className="my-2 my-md-0 mr-md-3">
             <span className="p-2 text-dark">
-              <NavLink to={'/'}>Search</NavLink>
+              <Link to={'/'}>Search</Link>
             </span>
             <span className="p-2 text-dark">
-              <NavLink to={'/vocabulary'}>Vocabulary</NavLink>
+              <Link to={'/vocabulary'}>Vocabulary</Link>
             </span>
 
             <span className="p-2 text-dark ">

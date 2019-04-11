@@ -22,7 +22,12 @@ context(
         homeDir: 'src/server/',
         output: 'build/$name.js',
         target: 'server@es7',
-        plugins: [['node_modules/**.json', JSONPlugin()]],
+        plugins: [
+          EnvPlugin({
+            GOOGLE_CLOUD_PROJECT: 'vietnamese-english',
+          }),
+          ['node_modules/**.json', JSONPlugin()],
+        ],
       })
     }
 
@@ -67,6 +72,7 @@ context(
           JSONPlugin(),
           WebIndexPlugin({
             template: 'src/client/index.html',
+            path: '.',
           }),
           this.isProduction &&
             QuantumPlugin({

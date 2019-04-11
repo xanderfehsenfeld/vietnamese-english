@@ -80,7 +80,7 @@ export class SearchContainer extends Container<IState> {
   fetchDictionary = async () => {
     this.setState({ isFetching: true })
 
-    const dictionary: Dictionary = (await axios.get('/definitions.json')).data
+    const dictionary: Dictionary = (await axios.get('definitions.json')).data
 
     const uniqueSubwords = uniq(
       Object.keys(dictionary).map((v) => v.split(' ')[0]),

@@ -4,6 +4,7 @@ import DefinitionPage from '../DefinitionPage'
 import { SearchContainer } from '../SearchPage'
 import axios from 'axios'
 import { values } from 'lodash'
+import { Link, Switch, Route } from 'react-router-dom'
 
 interface IState {
   savedWords: string[]
@@ -24,7 +25,7 @@ export class VocabularyContainer extends Container<IState> {
       this.setState({ selectedWord: word })
     }
   }
-  persistState = async (state: any) => await axios.post('/state', state)
+  persistState = async (state: any) => await axios.post('state', state)
   fetchState = async () => {
     this.setState({ isFetchingState: true })
     try {
@@ -115,7 +116,15 @@ const Vocabulary = () => (
                     </div>
                   ))}
               {dictionary && savedWords.length === 0 && (
-                <h6>Nothing here. Add words using the Search pane.</h6>
+                <h6>
+                  Nothing here. Add words using the{' '}
+                  <Switch>
+                    <Route path={'/'} exact render={() => 'Search pane.'} />
+                    <Route
+                      render={() => <Link to={'/'}>{'Search pane.'}</Link>}
+                    />
+                  </Switch>
+                </h6>
               )}
             </div>
           </div>
