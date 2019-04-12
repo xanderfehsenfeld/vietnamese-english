@@ -66,12 +66,12 @@ const SavedWordsView = ({
 
 const config = {
   automaticRearrangeAfterDropNode: true,
-  collapsible: true,
-  focusAnimationDuration: 0.75,
+  collapsible: false,
+  //focusAnimationDuration: 0.75,
   focusZoom: 1,
   height: 600,
   highlightDegree: 1,
-  highlightOpacity: 0.2,
+  highlightOpacity: 0.7,
   linkHighlightBehavior: true,
   maxZoom: 8,
   minZoom: 0.1,
@@ -199,24 +199,6 @@ interface GraphData {
 }
 
 type GraphMode = 'Single' | 'All'
-interface IState {
-  mode: GraphMode
-  graphDataForWordsInVocabulary: {
-    [word: string]: GraphData
-  }
-  dimensions: {
-    width: number
-    height: number
-  }
-  dataToRender?: GraphData
-}
-interface IProps {
-  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
-  savedWords: string[]
-  selectWord: (word: string) => void
-  dictionary: Dictionary
-  selectedWord?: string
-}
 
 const getGraphData = (
   compoundWord: string,
@@ -229,6 +211,21 @@ const getGraphData = (
   )
   return generateLinksAndNodes(adjacentWords)
 }
+interface IState {
+  mode: GraphMode
+  graphDataForWordsInVocabulary: {
+    [word: string]: GraphData
+  }
+
+  dataToRender?: GraphData
+}
+interface IProps {
+  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
+  savedWords: string[]
+  selectWord: (word: string) => void
+  dictionary: Dictionary
+  selectedWord?: string
+}
 
 class WordGraph extends React.Component<IProps, IState> {
   constructor(props: IProps) {
@@ -236,11 +233,11 @@ class WordGraph extends React.Component<IProps, IState> {
     this.state = {
       mode: 'Single',
       graphDataForWordsInVocabulary: this.calculateGraphData(),
-      dimensions: { width: 600, height: 600 },
     }
-    this.switchMode('Single')
     this.calculateGraphDataForAllWords()
   }
+
+  componentDidMount = () => this.switchMode('Single')
   calculateGraphData = () => {
     const { savedWords, wordsWithoutSpacesMappedToCompoundWords } = this.props
 
@@ -284,33 +281,18 @@ class WordGraph extends React.Component<IProps, IState> {
       resolve('resolved!')
     })
 
-  updateDimensions() {
-    this.setState({
-      dimensions: {
-        width: this.container.offsetWidth * 1.25,
-        height: this.container.offsetHeight * 1.25,
-      },
-    })
-  }
-  componentDidMount = () => {
-    this.updateDimensions()
-    window.addEventListener('resize', this.updateDimensions.bind(this))
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.updateDimensions.bind(this))
-  }
-  switchMode = (modeForThisButton: GraphMode): void => {
+  switchMode = (
+    modeForThisButton: GraphMode,
+    newSelectedWord?: string,
+  ): void => {
     this.setState({ mode: modeForThisButton })
     const { graphDataForWordsInVocabulary } = this.state
-    const {
-      selectedWord: selectedWordFromProps,
-      wordsWithoutSpacesMappedToCompoundWords,
-    } = this.props
-    const selectedWord = selectedWordFromProps || 'méo xệch'
+    const { wordsWithoutSpacesMappedToCompoundWords } = this.props
 
     let dataToRender: GraphData
     if (modeForThisButton === 'Single') {
+      const selectedWord = newSelectedWord || 'méo xệch'
+
       dataToRender =
         (graphDataForWordsInVocabulary &&
           graphDataForWordsInVocabulary[selectedWord]) ||
@@ -326,17 +308,8 @@ class WordGraph extends React.Component<IProps, IState> {
     this.setState({ dataToRender })
   }
   render() {
-    const { mode, dimensions, dataToRender } = this.state
-    const {
-      dictionary,
-      savedWords,
-      selectWord,
-      selectedWord: selectedWordFromProps,
-    } = this.props
-
-    const { width, height } = dimensions
-
-    const selectedWord = selectedWordFromProps || 'méo xệch'
+    const { mode, dataToRender } = this.state
+    const { dictionary, savedWords, selectWord, selectedWord } = this.props
 
     return (
       <div className={'fill row '}>
@@ -345,9 +318,9 @@ class WordGraph extends React.Component<IProps, IState> {
             <SavedWordsView
               selectWord={(v) => {
                 selectWord(v)
-                this.switchMode('Single')
+                this.switchMode('Single', v)
               }}
-              selectedWord={selectedWord}
+              selectedWord={selectedWord || ''}
               dictionary={dictionary}
               savedWords={savedWords}
             />
@@ -375,13 +348,13 @@ class WordGraph extends React.Component<IProps, IState> {
               </button>
             ))}
           </div>
-          <div ref={(el) => (this.container = el)}>
+          <div>
             {dataToRender && dataToRender.nodes.length ? (
               <Graph
                 key={selectedWord + mode}
                 id="graph-id"
                 data={dataToRender}
-                config={{ ...config, width, height }}
+                config={{ ...config }}
               />
             ) : null}
           </div>
