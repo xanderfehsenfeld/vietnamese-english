@@ -12,7 +12,8 @@ const {
 } = require('fuse-box')
 const { context, task, src } = require('fuse-box/sparky')
 const fs = require('fs')
-const { definitions } = require('@vntk/dictionary')
+const { definitions, words } = require('@vntk/dictionary')
+const { pick } = require('lodash')
 
 const distFolderName = (isProduction) => {
   if (isProduction) {
@@ -183,20 +184,34 @@ task('clean', (context) =>
 )
 
 task('copy:definitions', async (context) => {
-  fs.writeFileSync('./definitions.json', JSON.stringify(definitions), 'utf-8')
-
   await src('definitions.json', { base: '/' })
     .dest(`${distFolderName(context.isProduction)}/client`)
     .exec()
 })
 
-task('copy:favicon', async (context) => {
-  await src('favicon/*', { base: '/' })
-    .dest(`${distFolderName(context.isProduction)}/client`)
-    .exec()
-})
+task('write:definitions', async () => {
+  const wordsWithoutSpaces = words.filter((v) => v.split(' ').length === 1)
 
-task('copy-assets', ['&copy:favicon', '&copy:definitions'])
+  const compoundWords = words.filter((v) => v.split(' ').length !== 1)
+  const wordsWithoutSpacesMappedToCompoundWords = wordsWithoutSpaces.reduce(
+    (accumulator, current) => {
+      const compoundWordsForThisSubword = compoundWords.filter((compoundWord) =>
+        compoundWord.split(' ').includes(current),
+      )
+      if (compoundWordsForThisSubword.length) {
+        accumulator[current] = compoundWordsForThisSubword
+      }
+
+      return accumulator
+    },
+    {},
+  )
+  fs.writeFileSync(
+    './definitions.json',
+    JSON.stringify({ definitions, wordsWithoutSpacesMappedToCompoundWords }),
+    'utf-8',
+  )
+})
 
 task('watch:html', (context) => {
   const fuse = context.getConfigForClient()
@@ -209,7 +224,7 @@ task('watch:html', (context) => {
   })
 })
 
-task('watch-client', ['copy-assets', 'watch:html'], async (context) => {
+task('watch-client', ['&copy:definitions', '&watch:html'], async (context) => {
   const fuse = context.getConfigForClient()
   fuse.dev({
     port: 4444,
@@ -218,11 +233,15 @@ task('watch-client', ['copy-assets', 'watch:html'], async (context) => {
   await fuse.run()
 })
 
-task('build-client', ['set-prod-env', 'copy-assets'], async (context) => {
-  const fuse = context.getConfigForClient()
-  context.createBundleForClient(fuse)
-  await fuse.run()
-})
+task(
+  'build-client',
+  ['&set-prod-env', '&copy:definitions'],
+  async (context) => {
+    const fuse = context.getConfigForClient()
+    context.createBundleForClient(fuse)
+    await fuse.run()
+  },
+)
 
 task('default', ['&watch-server', '&watch-client'])
 task('build', ['clean', 'build-server', 'build-client'])

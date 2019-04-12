@@ -4,7 +4,7 @@ import { Subscribe, Container } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { flatten, uniqBy, uniq } from 'lodash'
+import { flatten, uniqBy, uniq, values } from 'lodash'
 
 const SavedWordsView = ({
   savedWords,
@@ -124,26 +124,19 @@ const config = {
 
 const getAdjacentWords = (
   wordWithNoSpaces: string,
-  allWords: string[],
-  depth = 0,
+  subWordMappedToCompoundWords: { [key: string]: string[] },
 ) => {
-  let adjacentWords = allWords.filter((w) =>
-    w.split(' ').includes(wordWithNoSpaces),
-  )
-  if (depth !== 0) {
-    adjacentWords = adjacentWords.concat(
-      flatten(
-        adjacentWords.map((v) => getAdjacentWords(v, allWords, depth - 1)),
-      ),
-    )
-  }
-
-  return uniq(adjacentWords)
+  let adjacentWords = subWordMappedToCompoundWords[wordWithNoSpaces] || []
+  return uniq([...adjacentWords, wordWithNoSpaces])
 }
 
 interface GraphLink {
   source: string
   target: string
+}
+
+interface GraphNode {
+  id: string
 }
 const filterUniqueLinks = (links: GraphLink[]) => {
   const alreadySeen: { [key: string]: boolean } = {}
@@ -163,12 +156,21 @@ const filterUniqueLinks = (links: GraphLink[]) => {
   )
 }
 
+const getMagentaNode = (id: string) => ({
+  id,
+  color: 'magenta',
+})
+
+const getGreenNode = (id: string) => ({
+  id,
+  color: 'green',
+})
+
 const generateLinksAndNodes = (words: string[]) => {
   let links: GraphLink[] = []
-  const nodes = words.map((v) => ({
-    id: v,
-    color: v.split(' ').length === 1 ? 'magenta' : 'green',
-  }))
+  const nodes = words.map((v) =>
+    v.split(' ').length === 1 ? getMagentaNode(v) : getGreenNode(v),
+  )
 
   words.forEach((word) => {
     const subwords = word.split(' ')
@@ -191,70 +193,231 @@ const generateLinksAndNodes = (words: string[]) => {
   return { links: uniqueLinks, nodes }
 }
 
+interface GraphData {
+  links: GraphLink[]
+  nodes: GraphNode[]
+}
+
+type GraphMode = 'Single' | 'All'
 interface IState {
-  mode: 'Shallow' | 'Deep'
+  mode: GraphMode
+  graphDataForWordsInVocabulary: {
+    [word: string]: GraphData
+  }
+  dimensions: {
+    width: number
+    height: number
+  }
+  dataToRender?: GraphData
+}
+interface IProps {
+  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
+  savedWords: string[]
+  selectWord: (word: string) => void
+  dictionary: Dictionary
+  selectedWord?: string
 }
 
-const WordGraph = () => {
-  return (
-    <Subscribe to={[SearchContainer, VocabularyContainer]}>
-      {(
-        { state }: SearchContainer,
-        { state: vocabularyState, selectWord }: VocabularyContainer,
-      ) => {
-        const { dictionary } = state
-        const { savedWords } = vocabularyState
-        if (dictionary) {
-          const selectedWord = vocabularyState.selectedWord || 'méo xệch'
-
-          const allWords = Object.keys(dictionary)
-
-          const adjacentWords = flatten(
-            selectedWord
-              .split(' ')
-              .map((x) => getAdjacentWords(x, allWords, 2)),
-          )
-          const data = generateLinksAndNodes(adjacentWords)
-
-          return (
-            <div className={'fill row '}>
-              <div className={'col-md-5 '}>
-                {dictionary && savedWords && (
-                  <SavedWordsView
-                    selectWord={selectWord}
-                    selectedWord={selectedWord}
-                    dictionary={dictionary}
-                    savedWords={savedWords}
-                  />
-                )}
-              </div>
-              <div
-                className={'col-md-7 '}
-                style={{
-                  borderLeft: 'solid 1px rgb(222, 226, 230)',
-                  paddingTop: 5,
-                }}
-              >
-                <div
-                  className="btn-group"
-                  role="group"
-                  aria-label="Basic example"
-                />
-                <Graph
-                  key={selectedWord}
-                  id="graph-id"
-                  data={data}
-                  config={config}
-                />
-              </div>
-            </div>
-          )
-        } else {
-          return null
-        }
-      }}
-    </Subscribe>
+const getGraphData = (
+  compoundWord: string,
+  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] },
+): GraphData => {
+  const adjacentWords = flatten(
+    compoundWord
+      .split(' ')
+      .map((x) => getAdjacentWords(x, wordsWithoutSpacesMappedToCompoundWords)),
   )
+  return generateLinksAndNodes(adjacentWords)
 }
 
-export default WordGraph
+class WordGraph extends React.Component<IProps, IState> {
+  constructor(props: IProps) {
+    super(props)
+    this.state = {
+      mode: 'Single',
+      graphDataForWordsInVocabulary: this.calculateGraphData(),
+      dimensions: { width: 600, height: 600 },
+    }
+    this.switchMode('Single')
+    this.calculateGraphDataForAllWords()
+  }
+  calculateGraphData = () => {
+    const { savedWords, wordsWithoutSpacesMappedToCompoundWords } = this.props
+
+    const graphDataForWordsInVocabulary = savedWords.reduce(
+      (acc, savedWord: string) => {
+        acc[savedWord] = getGraphData(
+          savedWord,
+          wordsWithoutSpacesMappedToCompoundWords,
+        )
+
+        return acc
+      },
+      {},
+    )
+    return graphDataForWordsInVocabulary
+  }
+  calculateGraphDataForAllWords = async () =>
+    new Promise((resolve) => {
+      const { wordsWithoutSpacesMappedToCompoundWords } = this.props
+
+      const magentaNodes = Object.keys(
+        wordsWithoutSpacesMappedToCompoundWords,
+      ).map(getMagentaNode)
+      const greenNodes = uniq(
+        flatten(values(wordsWithoutSpacesMappedToCompoundWords)),
+      ).map(getGreenNode)
+      const links = flatten(
+        Object.keys(wordsWithoutSpacesMappedToCompoundWords).map((subword) =>
+          wordsWithoutSpacesMappedToCompoundWords[subword].map(
+            (compoundWord) => ({
+              source: subword,
+              target: compoundWord,
+            }),
+          ),
+        ),
+      )
+      const data = {
+        nodes: [...magentaNodes, ...greenNodes],
+        links,
+      }
+      resolve('resolved!')
+    })
+
+  updateDimensions() {
+    this.setState({
+      dimensions: {
+        width: this.container.offsetWidth * 1.25,
+        height: this.container.offsetHeight * 1.25,
+      },
+    })
+  }
+  componentDidMount = () => {
+    this.updateDimensions()
+    window.addEventListener('resize', this.updateDimensions.bind(this))
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.updateDimensions.bind(this))
+  }
+  switchMode = (modeForThisButton: GraphMode): void => {
+    this.setState({ mode: modeForThisButton })
+    const { graphDataForWordsInVocabulary } = this.state
+    const {
+      selectedWord: selectedWordFromProps,
+      wordsWithoutSpacesMappedToCompoundWords,
+    } = this.props
+    const selectedWord = selectedWordFromProps || 'méo xệch'
+
+    let dataToRender: GraphData
+    if (modeForThisButton === 'Single') {
+      dataToRender =
+        (graphDataForWordsInVocabulary &&
+          graphDataForWordsInVocabulary[selectedWord]) ||
+        getGraphData(selectedWord, wordsWithoutSpacesMappedToCompoundWords)
+    } else {
+      const allData: GraphData[] = values(this.calculateGraphData())
+      dataToRender = {
+        nodes: flatten(allData.map(({ nodes }) => nodes)),
+        links: flatten(allData.map(({ links }) => links)),
+      }
+    }
+
+    this.setState({ dataToRender })
+  }
+  render() {
+    const { mode, dimensions, dataToRender } = this.state
+    const {
+      dictionary,
+      savedWords,
+      selectWord,
+      selectedWord: selectedWordFromProps,
+    } = this.props
+
+    const { width, height } = dimensions
+
+    const selectedWord = selectedWordFromProps || 'méo xệch'
+
+    return (
+      <div className={'fill row '}>
+        <div className={'col-md-5 '}>
+          {dictionary && savedWords ? (
+            <SavedWordsView
+              selectWord={(v) => {
+                selectWord(v)
+                this.switchMode('Single')
+              }}
+              selectedWord={selectedWord}
+              dictionary={dictionary}
+              savedWords={savedWords}
+            />
+          ) : null}
+        </div>
+
+        <div
+          className={`col-md-7`}
+          style={{
+            borderLeft: 'solid 1px rgb(222, 226, 230)',
+            paddingTop: 5,
+          }}
+        >
+          <div className="btn-group" role="group" aria-label="Basic example">
+            {['Single', 'All'].map((modeForThisButton, i: number) => (
+              <button
+                key={i}
+                onClick={() => this.switchMode(modeForThisButton)}
+                type="button"
+                className={`btn ${
+                  mode === modeForThisButton ? 'btn-primary' : 'btn-secondary'
+                }`}
+              >
+                {modeForThisButton}
+              </button>
+            ))}
+          </div>
+          <div ref={(el) => (this.container = el)}>
+            {dataToRender && dataToRender.nodes.length ? (
+              <Graph
+                key={selectedWord + mode}
+                id="graph-id"
+                data={dataToRender}
+                config={{ ...config, width, height }}
+              />
+            ) : null}
+          </div>
+        </div>
+      </div>
+    )
+  }
+}
+
+const GraphWithContainers = () => (
+  <Subscribe to={[SearchContainer, VocabularyContainer]}>
+    {(
+      { state }: SearchContainer,
+      { state: vocabularyState, selectWord }: VocabularyContainer,
+    ) => {
+      const { dictionary, wordsWithoutSpacesMappedToCompoundWords } = state
+
+      const { savedWords, selectedWord } = vocabularyState
+
+      if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
+        return (
+          <WordGraph
+            selectedWord={selectedWord}
+            dictionary={dictionary}
+            wordsWithoutSpacesMappedToCompoundWords={
+              wordsWithoutSpacesMappedToCompoundWords
+            }
+            savedWords={savedWords}
+            selectWord={selectWord}
+          />
+        )
+      } else {
+        return null
+      }
+    }}
+  </Subscribe>
+)
+
+export default GraphWithContainers

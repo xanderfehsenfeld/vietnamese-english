@@ -4,7 +4,7 @@ import { HashRouter as Router, Switch, Route } from 'react-router-dom'
 import Header from '../Header'
 import Search, { SearchContainer } from '../SearchPage'
 import Vocabulary, { VocabularyContainer } from '../Vocabulary'
-import WordGraph from '../WordGraph'
+import GraphWithContainers from '../WordGraph'
 
 const SearchVocabularyCompositeView = () => (
   <div className={'fill row '}>
@@ -49,7 +49,7 @@ const Main = () => (
       <div className={'container fill'}>
         <Switch>
           <Route render={Vocabulary} path={'/vocabulary'} />
-          <Route render={WordGraph} path={'/graph'} />
+          <Route render={GraphWithContainers} path={'/graph'} />
           <Route render={SearchVocabularyCompositeView} />
         </Switch>
       </div>

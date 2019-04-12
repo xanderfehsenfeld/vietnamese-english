@@ -15,11 +15,10 @@ interface IState {
     definitions: Definition[]
     start: number
   }[]
-
+  wordsWithoutSpacesMappedToCompoundWords?: { [key: string]: string[] }
   showExample: boolean
   isFetching: boolean
   dictionary?: Dictionary
-  uniqueSubwords?: string[]
   selectedWord?: string
 }
 
@@ -80,13 +79,18 @@ export class SearchContainer extends Container<IState> {
   fetchDictionary = async () => {
     this.setState({ isFetching: true })
 
-    const dictionary: Dictionary = (await axios.get('definitions.json')).data
+    const response: {
+      definitions: Dictionary
+      wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
+    } = (await axios.get('definitions.json')).data
 
-    const uniqueSubwords = uniq(
-      Object.keys(dictionary).map((v) => v.split(' ')[0]),
-    )
+    const { wordsWithoutSpacesMappedToCompoundWords, definitions } = response
 
-    this.setState({ dictionary, uniqueSubwords, isFetching: false })
+    this.setState({
+      dictionary: definitions,
+      wordsWithoutSpacesMappedToCompoundWords,
+      isFetching: false,
+    })
   }
 }
 
@@ -112,7 +116,8 @@ const Search = () => (
             />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            {state.subwordSuggestions && state.subwordSuggestions.length && (
+            {state.subwordSuggestions &&
+            state.subwordSuggestions.length !== 0 ? (
               <React.Fragment>
                 <input
                   style={{ marginTop: 10 }}
@@ -126,7 +131,7 @@ const Search = () => (
                   show example
                 </label>
               </React.Fragment>
-            )}
+            ) : null}
           </div>
           <div>
             {!state.selectedWord &&

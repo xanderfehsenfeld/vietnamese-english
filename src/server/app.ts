@@ -13,6 +13,7 @@ import {
   redirectToLoginIfUnauthorized,
   authRequired,
 } from './auth'
+import { values } from 'lodash'
 
 const DatastoreStore = require('@google-cloud/connect-datastore')(session)
 
@@ -41,7 +42,9 @@ app.get('/state', authRequired, async (req, res) => {
   const query = datastore
     .createQuery('state')
     .filter('__key__', '=', datastore.key(['state', req.user.id]))
-  const state = (await datastore.runQuery(query))[0]
+  const state = JSON.parse(
+    values((await datastore.runQuery(query))[0][0]).join(''),
+  )
   res
     .status(200)
     .send(state)

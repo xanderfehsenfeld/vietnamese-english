@@ -29,9 +29,7 @@ export class VocabularyContainer extends Container<IState> {
   fetchState = async () => {
     this.setState({ isFetchingState: true })
     try {
-      const state = JSON.parse(
-        values((await axios.get('/state')).data[0]).join(''),
-      )
+      const state = (await axios.get('state')).data
       this.setState({
         savedWords: state,
         isFetchingState: false,
@@ -63,7 +61,7 @@ export class VocabularyContainer extends Container<IState> {
 const Vocabulary = () => (
   <Subscribe to={[VocabularyContainer, SearchContainer]}>
     {(
-      { state, fetchState, selectWord }: VocabularyContainer,
+      { state, selectWord }: VocabularyContainer,
       { state: stateWithDictionary }: SearchContainer,
     ) => {
       const {
