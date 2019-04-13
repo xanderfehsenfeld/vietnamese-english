@@ -7,20 +7,22 @@ import Vocabulary, { VocabularyContainer } from '../Vocabulary'
 import GraphWithContainers from '../WordGraph'
 
 const SearchVocabularyCompositeView = () => (
-  <div className={'fill row '}>
-    <div className={'col-12 d-lg-none'}>
-      <Search />
-    </div>
+  <div className={'container fill'}>
+    <div className={' row '}>
+      <div className={'col-12 d-lg-none'}>
+        <Search />
+      </div>
 
-    <div className={'col-7 d-none d-lg-block'}>
-      <Search />
-    </div>
+      <div className={'col-7 d-none d-lg-block'}>
+        <Search />
+      </div>
 
-    <div
-      className={'col-5 d-none d-lg-block'}
-      style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
-    >
-      <Vocabulary />
+      <div
+        className={'col-5 d-none d-lg-block'}
+        style={{ borderLeft: 'solid 1px rgb(222, 226, 230)' }}
+      >
+        <Vocabulary />
+      </div>
     </div>
   </div>
 )
@@ -46,13 +48,11 @@ const Main = () => (
     </Subscribe>
     <Router>
       <Header />
-      <div className={'container fill'}>
-        <Switch>
-          <Route render={Vocabulary} path={'/vocabulary'} />
-          <Route render={GraphWithContainers} path={'/graph'} />
-          <Route render={SearchVocabularyCompositeView} />
-        </Switch>
-      </div>
+      <Switch>
+        <Route render={Vocabulary} path={'/vocabulary'} />
+        <Route render={GraphWithContainers} path={'/graph'} />
+        <Route render={SearchVocabularyCompositeView} />
+      </Switch>
     </Router>
   </UnstatedProvider>
 )

@@ -5,6 +5,7 @@ import { SearchContainer } from '../SearchPage'
 import axios from 'axios'
 import { values } from 'lodash'
 import { Link, Switch, Route } from 'react-router-dom'
+import VocabularyBadge from '../VocabularyBadge'
 
 interface IState {
   savedWords: string[]
@@ -58,7 +59,7 @@ export class VocabularyContainer extends Container<IState> {
   }
 }
 
-const Vocabulary = () => (
+const Vocabulary = ({ compact = false }) => (
   <Subscribe to={[VocabularyContainer, SearchContainer]}>
     {(
       { state, selectWord }: VocabularyContainer,
@@ -77,52 +78,59 @@ const Vocabulary = () => (
         return (
           <div style={{ height: '100%' }}>
             <h3>Vocabulary</h3>
+
             <span>Fetching...</span>
           </div>
         )
       } else {
         const { dictionary } = stateWithDictionary
+
+        const savedWordsInOrder =
+          savedWords && savedWords.slice(0, 15).reverse()
         return (
-          <div style={{ height: '100%' }}>
-            <h3>Vocabulary</h3>
-            <div>
-              {dictionary &&
-                savedWords &&
-                savedWords
-                  .slice(0, 15)
-                  .reverse()
-                  .map((v) => ({ text: v, definitions: dictionary[v] }))
-                  .map((v) => (
-                    <div
-                      key={v.text}
-                      className={'suggestion'}
-                      style={{
-                        cursor: 'pointer',
-                        paddingBottom: 4,
-                        paddingTop: 3,
-                      }}
-                      onClick={() => selectWord(v.text)}
-                    >
-                      <DefinitionPage
-                        definitions={v.definitions}
-                        text={v.text}
-                        isSelected={selectedWord === v.text}
+          <div className={'container fill'}>
+            <div style={{ height: '100%' }}>
+              <h3>
+                Vocabulary <VocabularyBadge />
+              </h3>
+              <div>
+                {!compact &&
+                  dictionary &&
+                  savedWordsInOrder
+
+                    .map((v) => ({ text: v, definitions: dictionary[v] }))
+                    .map((v) => (
+                      <div
+                        key={v.text}
+                        className={'suggestion'}
+                        style={{
+                          cursor: 'pointer',
+                          paddingBottom: 4,
+                          paddingTop: 3,
+                        }}
+                        onClick={() => selectWord(v.text)}
                       >
-                        {v.text}
-                      </DefinitionPage>
-                    </div>
-                  ))}
-              {dictionary && savedWords.length === 0 && (
-                <h6>
-                  Nothing here. Add words using the{' '}
-                  <Switch>
-                    <Route path={'/'} exact render={() => 'Search pane.'} />
-                    <Route
-                      render={() => <Link to={'/'}>{'Search pane.'}</Link>}
-                    />
-                  </Switch>
-                </h6>
-              )}
+                        <DefinitionPage
+                          definitions={v.definitions}
+                          text={v.text}
+                          isSelected={selectedWord === v.text}
+                        >
+                          {v.text}
+                        </DefinitionPage>
+                      </div>
+                    ))}
+                {dictionary && savedWords.length === 0 && (
+                  <h6>
+                    Nothing here. Add words using the{' '}
+                    <Switch>
+                      <Route path={'/'} exact render={() => 'Search pane.'} />
+                      <Route
+                        render={() => <Link to={'/'}>{'Search pane.'}</Link>}
+                      />
+                    </Switch>
+                  </h6>
+                )}
+              </div>
             </div>
           </div>
         )

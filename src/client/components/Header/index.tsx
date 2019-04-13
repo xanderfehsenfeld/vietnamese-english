@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Container, Subscribe } from 'unstated'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
+import VocabularyBadge from '../VocabularyBadge'
 
 interface IState {
   startedInitialFetch: boolean
@@ -36,7 +37,7 @@ const Header = () => (
               <Link to={'/'}>Search</Link>
             </span>
             <span className="p-2 text-dark">
-              <Link to={'/vocabulary'}>Vocabulary</Link>
+              <Link to={'/vocabulary'}>Vocabulary</Link> <VocabularyBadge />
             </span>
             <span className="p-2 text-dark">
               <Link to={'/graph'}>Graph</Link>

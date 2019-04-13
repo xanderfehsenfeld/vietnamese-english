@@ -99,9 +99,8 @@ const Search = () => (
     {({ state, onChange, toggleShowExample }: SearchContainer) => {
       const { showExample } = state
       return (
-        <div>
+        <div style={{ height: '100%' }}>
           <h3>Search</h3>
-
           <div className="md-form mt-0">
             <input
               className="form-control"
