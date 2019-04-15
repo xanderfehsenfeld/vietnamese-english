@@ -35,7 +35,7 @@ const getAdjacentWords = (
 ) => {
   let adjacentWords = subWordMappedToCompoundWords[wordWithNoSpaces]
   if (adjacentWords) {
-    return uniq([...adjacentWords, wordWithNoSpaces])
+    return uniq([wordWithNoSpaces])
   } else {
     return []
   }
@@ -72,11 +72,8 @@ export const getGraphDataForCompoundWord = (
           ),
         ),
     )
-    if (hiddenAdjacentNodes.length) {
-      return { ...getGreenNode(wordText), hiddenAdjacentNodes, color: 'orange' }
-    } else {
-      return { ...getGreenNode(wordText), hiddenAdjacentNodes }
-    }
+
+    return { ...getGreenNode(wordText), hiddenAdjacentNodes }
   })
 
   const nodes = uniqBy(
@@ -85,21 +82,10 @@ export const getGraphDataForCompoundWord = (
   )
 
   const links: GraphLink[] = filterUniqueLinks(
-    flatten(
-      singularWords.map((singularWord) => {
-        const adjacents: undefined | string[] =
-          wordsWithoutSpacesMappedToCompoundWords[singularWord]
-
-        if (adjacents) {
-          return adjacents.map((otherWord) => ({
-            source: otherWord,
-            target: singularWord,
-          }))
-        } else {
-          return []
-        }
-      }),
-    ),
+    singularWords.map((singularWord) => ({
+      target: singularWord,
+      source: compoundWord,
+    })),
   )
   return { links, nodes }
 }

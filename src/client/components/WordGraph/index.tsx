@@ -9,9 +9,12 @@ import { getGraphDataForCompoundWord, filterUniqueLinks } from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import SavedWordsView from './components/SavedWordsView'
 import withSizes from 'react-sizes'
+import { IReactD3Config } from './model'
 
-const config = {
+const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
+  collapsible: false,
+  directed: true,
   focusZoom: 1,
   height: 600,
   highlightDegree: 1,
@@ -39,7 +42,6 @@ const config = {
     highlightFontWeight: 'bold',
     highlightStrokeColor: 'SAME',
     highlightStrokeWidth: 1.5,
-    labelProperty: 'name',
     mouseCursor: 'pointer',
     opacity: 1,
     renderLabel: true,
@@ -209,7 +211,8 @@ class WordGraph extends React.Component<IProps, IState> {
             .filter(
               ({ source, target }) =>
                 nodes.some(({ id }) => source === id) &&
-                nodes.some(({ id }) => target === id),
+                nodes.some(({ id }) => target === id) &&
+                source !== target,
             ),
         )
         this.setState({ dataToRender: { nodes, links } })

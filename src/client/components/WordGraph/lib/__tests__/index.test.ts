@@ -9,25 +9,31 @@ describe(getGraphDataForCompoundWord.name, () => {
   it('returns expected nodes', () => {
     const wordsInNodes = nodes.map(({ id }) => id)
 
-    const expectedItems = ['rest room', 'rest easy', 'rest happily', 'rest']
+    const expectedItems = ['rest room', 'rest']
     expectedItems.forEach((expectedItem) =>
       expect(wordsInNodes).toContain(expectedItem),
     )
 
-    const notExpected = ['room', 'happily married', 'happily']
+    const notExpected = [
+      'room',
+      'happily married',
+      'happily',
+      'rest easy',
+      'rest happily',
+    ]
 
     notExpected.forEach((notExpectedItem) =>
       expect(wordsInNodes).not.toContain(notExpectedItem),
     )
   })
 
-  it('includes hidden adjacent nodes if there are any', () => {
-    const restHappilyNode = nodes.find((v) => v.id === 'rest happily')
-    expect(restHappilyNode).toMatchObject({
-      id: 'rest happily',
-      hiddenAdjacentNodes: ['happily married', 'happily'],
-      color: 'green',
-    })
+  it('does not include links to nonexistent nodes', () => {
+    const linksToNonexistentNodes = links.filter(
+      ({ source, target }) =>
+        !nodes.some(({ id }) => source === id) ||
+        !nodes.some(({ id }) => target === id),
+    )
+    expect(linksToNonexistentNodes).toHaveLength(0)
   })
 
   it('returns expected links', () => {
