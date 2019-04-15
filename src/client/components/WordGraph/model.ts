@@ -1,3 +1,5 @@
+import { IGraphNode } from './components/GraphNode'
+
 interface D3Config {
   alphaTarget: number
   gravity: number
@@ -23,6 +25,7 @@ interface NodeConfig {
   strokeWidth: number
   svg: string
   symbolType: string
+  viewGenerator: ({ hiddenAdjacentNodes, color }: IGraphNode) => JSX.Element
 }
 
 interface LinkConfig {

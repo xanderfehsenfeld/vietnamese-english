@@ -1,15 +1,20 @@
 import * as React from 'react'
-import { Graph } from 'react-d3-graph'
+import { Graph, Node } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
 import { flatten, values, compact } from 'lodash'
-import { getGraphDataForCompoundWord, filterUniqueLinks } from './lib'
+import {
+  getGraphDataForCompoundWord,
+  filterUniqueLinks,
+  getHiddenAdjacentWords,
+} from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import SavedWordsView from './components/SavedWordsView'
 import withSizes from 'react-sizes'
 import { IReactD3Config } from './model'
+import GraphNode, { IGraphNode } from './components/GraphNode'
 
 const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
@@ -27,10 +32,10 @@ const config: IReactD3Config = {
   staticGraph: false,
   width: 600,
   d3: {
-    alphaTarget: 0.1,
-    gravity: -1000,
-    linkLength: 100,
-    linkStrength: 1,
+    alphaTarget: 0.05,
+    gravity: -250,
+    linkLength: 120,
+    linkStrength: 2,
   },
   node: {
     color: '#d3d3d3',
@@ -50,6 +55,7 @@ const config: IReactD3Config = {
     strokeWidth: 1.5,
     svg: '',
     symbolType: 'circle',
+    viewGenerator: GraphNode,
   },
   link: {
     color: '#d3d3d3',
@@ -68,19 +74,14 @@ const config: IReactD3Config = {
   },
 }
 
-export interface GraphLink {
+export interface IGraphLink {
   source: string
   target: string
 }
 
-interface GraphNode {
-  id: string
-  hiddenAdjacentNodes?: string[]
-}
-
 export interface GraphData {
-  links: GraphLink[]
-  nodes: GraphNode[]
+  links: IGraphLink[]
+  nodes: IGraphNode[]
 }
 
 type GraphMode = 'Single' | 'All'
@@ -171,7 +172,12 @@ class WordGraph extends React.Component<IProps, IState> {
           if (neighbors) {
             if (subword !== idOfNodeClicked) {
               return {
-                nodes: [{ id: subword, color: 'magenta' }],
+                nodes: [
+                  {
+                    id: subword,
+                    color: 'magenta',
+                  },
+                ],
                 links: [
                   {
                     source: idOfNodeClicked,
@@ -191,8 +197,12 @@ class WordGraph extends React.Component<IProps, IState> {
           return undefined
         }),
     )
-    const nodesToAdd: GraphNode[] = flatten(dataToAdd.map(({ nodes }) => nodes))
-    const linksToAdd: GraphLink[] = flatten(dataToAdd.map(({ links }) => links))
+    const nodesToAdd: IGraphNode[] = flatten(
+      dataToAdd.map(({ nodes }) => nodes),
+    )
+    const linksToAdd: IGraphLink[] = flatten(
+      dataToAdd.map(({ links }) => links),
+    )
 
     if (dataToRender) {
       const [uniqueNodeToAdd] = nodesToAdd.filter(
@@ -203,7 +213,17 @@ class WordGraph extends React.Component<IProps, IState> {
       )
 
       if (uniqueNodeToAdd) {
-        const nodes = dataToRender.nodes.concat([uniqueNodeToAdd])
+        const nodes = dataToRender.nodes.concat([{ ...uniqueNodeToAdd }])
+
+        const nodesWithHiddenAdjacent = nodes.map(({ id, ...rest }) => ({
+          ...rest,
+          id,
+          hiddenAdjacentNodes: getHiddenAdjacentWords(
+            id,
+            wordsWithoutSpacesMappedToCompoundWords,
+            nodes.map(({ id }) => id),
+          ),
+        }))
 
         const links = filterUniqueLinks(
           dataToRender.links
@@ -211,11 +231,13 @@ class WordGraph extends React.Component<IProps, IState> {
             .filter(
               ({ source, target }) =>
                 nodes.some(({ id }) => source === id) &&
-                nodes.some(({ id }) => target === id) &&
-                source !== target,
+                nodes.some(({ id }) => target === id),
             ),
         )
-        this.setState({ dataToRender: { nodes, links } })
+
+        this.setState({
+          dataToRender: { nodes: nodesWithHiddenAdjacent, links },
+        })
       }
     }
   }
