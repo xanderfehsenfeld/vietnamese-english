@@ -49,8 +49,8 @@ const Main = () => (
     <Router>
       <Header />
       <Switch>
-        <Route render={Vocabulary} path={'/vocabulary'} />
-        <Route render={GraphWithContainers} path={'/graph'} />
+        <Route component={Vocabulary} path={'/vocabulary'} />
+        <Route component={GraphWithContainers} path={'/graph'} />
         <Route render={SearchVocabularyCompositeView} />
       </Switch>
     </Router>

@@ -8,6 +8,7 @@ import { flatten, values, uniq, uniqBy, compact } from 'lodash'
 import { getGraphDataForCompoundWord, filterUniqueLinks } from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import SavedWordsView from './components/SavedWordsView'
+import withSizes from 'react-sizes'
 
 const config = {
   automaticRearrangeAfterDropNode: true,
@@ -26,7 +27,7 @@ const config = {
   d3: {
     alphaTarget: 0.1,
     gravity: -1000,
-    linkLength: 50,
+    linkLength: 100,
     linkStrength: 1,
   },
   node: {
@@ -43,7 +44,7 @@ const config = {
     mouseCursor: 'pointer',
     opacity: 1,
     renderLabel: true,
-    size: 800,
+    size: 1000,
     strokeColor: 'none',
     strokeWidth: 1.5,
     svg: '',
@@ -96,6 +97,8 @@ interface IProps {
   selectWord: (word: string) => void
   dictionary: Dictionary
   selectedWord?: string
+  height: number
+  width: number
 }
 
 class WordGraph extends React.Component<IProps, IState> {
@@ -107,7 +110,9 @@ class WordGraph extends React.Component<IProps, IState> {
     }
   }
 
-  componentDidMount = () => this.switchMode('Single')
+  componentDidMount = () => {
+    setTimeout(() => this.switchMode('Single'), 1000)
+  }
   calculateGraphData = () => {
     const { savedWords, wordsWithoutSpacesMappedToCompoundWords } = this.props
 
@@ -117,7 +122,6 @@ class WordGraph extends React.Component<IProps, IState> {
           savedWord,
           wordsWithoutSpacesMappedToCompoundWords,
         )
-
         return acc
       },
       {},
@@ -158,30 +162,33 @@ class WordGraph extends React.Component<IProps, IState> {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
     const { dataToRender } = this.state
     const dataToAdd = compact(
-      idOfNodeClicked.split(' ').map((subword) => {
-        const neighbors = wordsWithoutSpacesMappedToCompoundWords[subword]
-        if (neighbors) {
-          if (subword !== idOfNodeClicked) {
-            return {
-              nodes: [{ id: subword, color: 'magenta' }],
-              links: [
-                {
-                  source: idOfNodeClicked,
-                  target: subword,
-                },
-              ],
+      idOfNodeClicked
+        .split(' ')
+        .filter((v) => v)
+        .map((subword) => {
+          const neighbors = wordsWithoutSpacesMappedToCompoundWords[subword]
+          if (neighbors) {
+            if (subword !== idOfNodeClicked) {
+              return {
+                nodes: [{ id: subword, color: 'magenta' }],
+                links: [
+                  {
+                    source: idOfNodeClicked,
+                    target: subword,
+                  },
+                ],
+              }
+            } else {
+              const nodes = neighbors.map((id) => ({ id, color: 'green' }))
+              const links = neighbors.map((id) => ({
+                source: id,
+                target: subword,
+              }))
+              return { nodes, links }
             }
-          } else {
-            const nodes = neighbors.map((id) => ({ id, color: 'green' }))
-            const links = neighbors.map((id) => ({
-              source: id,
-              target: subword,
-            }))
-            return { nodes, links }
           }
-        }
-        return undefined
-      }),
+          return undefined
+        }),
     )
     const nodesToAdd: GraphNode[] = flatten(dataToAdd.map(({ nodes }) => nodes))
     const linksToAdd: GraphLink[] = flatten(dataToAdd.map(({ links }) => links))
@@ -200,59 +207,73 @@ class WordGraph extends React.Component<IProps, IState> {
   }
   render() {
     const { mode, dataToRender } = this.state
-    const { dictionary, savedWords, selectWord, selectedWord } = this.props
+    const {
+      dictionary,
+      savedWords,
+      selectWord,
+      selectedWord,
+      height,
+      width,
+    } = this.props
     const { onClickNode } = this
     return (
-      <div className={'container'}>
-        <div className={'fill row '}>
-          <div className={'col-md-3 '}>
-            {dictionary && savedWords ? (
-              <SavedWordsView
-                selectWord={(v) => {
-                  selectWord(v)
-                  this.switchMode('Single', v)
-                }}
-                selectedWord={selectedWord || ''}
-                dictionary={dictionary}
-                savedWords={savedWords}
-              />
-            ) : null}
-          </div>
-
-          <div
-            className={`col-md-9`}
-            style={{
-              borderLeft: 'solid 1px rgb(222, 226, 230)',
-              paddingTop: 5,
-            }}
-          >
-            <div className="btn-group" role="group" aria-label="Basic example">
-              {['Single', 'All'].map((modeForThisButton, i: number) => (
-                <button
-                  key={i}
-                  onClick={() => this.switchMode(modeForThisButton)}
-                  type="button"
-                  className={`btn ${
-                    mode === modeForThisButton ? 'btn-primary' : 'btn-secondary'
-                  }`}
-                >
-                  {modeForThisButton}
-                </button>
-              ))}
-            </div>
-            <GraphInstructions />
-            <div
-              style={{ border: 'solid 1px rgb(222, 226, 230)', marginTop: 10 }}
-            >
-              {dataToRender && dataToRender.nodes.length ? (
-                <Graph
-                  onClickNode={onClickNode}
-                  key={selectedWord + mode}
-                  id="graph-id"
-                  data={dataToRender}
-                  config={{ ...config }}
+      <div>
+        <div style={{ position: 'absolute', left: 0 }}>
+          {dataToRender && dataToRender.nodes.length ? (
+            <Graph
+              onClickNode={onClickNode}
+              key={selectedWord + mode + JSON.stringify(savedWords)}
+              id="graph-id"
+              data={dataToRender}
+              config={{ ...config, height: height - 73, width: width - 10 }}
+            />
+          ) : null}
+        </div>
+        <div className={'container-fluid'}>
+          <div className={'row '}>
+            <div className={'col-md-3 '}>
+              {dictionary && savedWords ? (
+                <SavedWordsView
+                  selectWord={(v) => {
+                    selectWord(v)
+                    this.switchMode('Single', v)
+                  }}
+                  selectedWord={selectedWord || ''}
+                  dictionary={dictionary}
+                  savedWords={savedWords}
                 />
               ) : null}
+              <div
+                className="btn-group"
+                role="group"
+                aria-label="Basic example"
+                style={{ paddingTop: 5 }}
+              >
+                {['Single', 'All'].map((modeForThisButton, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => this.switchMode(modeForThisButton)}
+                    type="button"
+                    className={`btn ${
+                      mode === modeForThisButton
+                        ? 'btn-primary'
+                        : 'btn-secondary'
+                    }`}
+                  >
+                    {modeForThisButton}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div
+              className={`col-md-9`}
+              style={{
+                paddingTop: 5,
+                pointerEvents: 'none',
+              }}
+            >
+              <GraphInstructions />
             </div>
           </div>
         </div>
@@ -260,6 +281,10 @@ class WordGraph extends React.Component<IProps, IState> {
     )
   }
 }
+
+const mapSizesToProps = (sizes: any) => sizes
+
+const WordGraphWithDimensions = withSizes(mapSizesToProps)(WordGraph)
 
 const GraphWithContainers = () => (
   <Subscribe to={[SearchContainer, VocabularyContainer]}>
@@ -271,9 +296,13 @@ const GraphWithContainers = () => (
 
       const { savedWords, selectedWord } = vocabularyState
 
-      if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
+      if (
+        dictionary &&
+        wordsWithoutSpacesMappedToCompoundWords &&
+        savedWords.length
+      ) {
         return (
-          <WordGraph
+          <WordGraphWithDimensions
             selectedWord={selectedWord}
             dictionary={dictionary}
             wordsWithoutSpacesMappedToCompoundWords={
