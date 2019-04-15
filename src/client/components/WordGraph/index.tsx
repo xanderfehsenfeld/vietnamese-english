@@ -4,7 +4,7 @@ import { Subscribe } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { flatten, values, uniq, uniqBy, compact } from 'lodash'
+import { flatten, values, compact } from 'lodash'
 import { getGraphDataForCompoundWord, filterUniqueLinks } from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import SavedWordsView from './components/SavedWordsView'
@@ -12,7 +12,6 @@ import withSizes from 'react-sizes'
 
 const config = {
   automaticRearrangeAfterDropNode: true,
-  collapsible: false,
   focusZoom: 1,
   height: 600,
   highlightDegree: 1,
@@ -194,15 +193,27 @@ class WordGraph extends React.Component<IProps, IState> {
     const linksToAdd: GraphLink[] = flatten(dataToAdd.map(({ links }) => links))
 
     if (dataToRender) {
-      const nodes = uniqBy(
-        dataToRender.nodes.concat(nodesToAdd),
-        ({ id }) => id,
-      ).slice(0, dataToRender.nodes.length + 1)
-      const links = filterUniqueLinks(
-        dataToRender.links.concat(linksToAdd),
-      ).slice(0, dataToRender.links.length + 1)
+      const [uniqueNodeToAdd] = nodesToAdd.filter(
+        ({ id }) =>
+          !dataToRender.nodes.some(
+            ({ id: idAlreadyPresent }) => idAlreadyPresent === id,
+          ),
+      )
 
-      this.setState({ dataToRender: { nodes, links } })
+      if (uniqueNodeToAdd) {
+        const nodes = dataToRender.nodes.concat([uniqueNodeToAdd])
+
+        const links = filterUniqueLinks(
+          dataToRender.links
+            .concat(linksToAdd)
+            .filter(
+              ({ source, target }) =>
+                nodes.some(({ id }) => source === id) &&
+                nodes.some(({ id }) => target === id),
+            ),
+        )
+        this.setState({ dataToRender: { nodes, links } })
+      }
     }
   }
   render() {
@@ -242,28 +253,30 @@ class WordGraph extends React.Component<IProps, IState> {
                   dictionary={dictionary}
                   savedWords={savedWords}
                 />
+              ) : null}{' '}
+              {savedWords.length ? (
+                <div
+                  className="btn-group"
+                  role="group"
+                  aria-label="Basic example"
+                  style={{ paddingTop: 5 }}
+                >
+                  {['Single', 'All'].map((modeForThisButton, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => this.switchMode(modeForThisButton)}
+                      type="button"
+                      className={`btn ${
+                        mode === modeForThisButton
+                          ? 'btn-primary'
+                          : 'btn-secondary'
+                      }`}
+                    >
+                      {modeForThisButton}
+                    </button>
+                  ))}
+                </div>
               ) : null}
-              <div
-                className="btn-group"
-                role="group"
-                aria-label="Basic example"
-                style={{ paddingTop: 5 }}
-              >
-                {['Single', 'All'].map((modeForThisButton, i: number) => (
-                  <button
-                    key={i}
-                    onClick={() => this.switchMode(modeForThisButton)}
-                    type="button"
-                    className={`btn ${
-                      mode === modeForThisButton
-                        ? 'btn-primary'
-                        : 'btn-secondary'
-                    }`}
-                  >
-                    {modeForThisButton}
-                  </button>
-                ))}
-              </div>
             </div>
 
             <div
@@ -296,11 +309,7 @@ const GraphWithContainers = () => (
 
       const { savedWords, selectedWord } = vocabularyState
 
-      if (
-        dictionary &&
-        wordsWithoutSpacesMappedToCompoundWords &&
-        savedWords.length
-      ) {
+      if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
         return (
           <WordGraphWithDimensions
             selectedWord={selectedWord}

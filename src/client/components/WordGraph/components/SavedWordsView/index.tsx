@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Dictionary } from '../../../../../model'
 import VocabularyBadge from '../../../VocabularyBadge'
+import { Link } from 'react-router-dom'
 
 const SavedWordsView = ({
   savedWords,
@@ -18,6 +19,13 @@ const SavedWordsView = ({
       <h3>
         Vocabulary <VocabularyBadge />
       </h3>
+      {savedWords.length === 0 && (
+        <h6>
+          Add words to your vocabulary using the{' '}
+          <Link to={'/'}>{'Search pane.'}</Link>
+        </h6>
+      )}
+
       {savedWords
         .slice(0, 15)
         .reverse()
