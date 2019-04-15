@@ -4,7 +4,7 @@ import { Subscribe } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { flatten, values, compact } from 'lodash'
+import { flatten, values, compact, orderBy } from 'lodash'
 import {
   getGraphDataForCompoundWord,
   filterUniqueLinks,
@@ -28,7 +28,6 @@ const config: IReactD3Config = {
   maxZoom: 8,
   minZoom: 0.1,
   nodeHighlightBehavior: true,
-  panAndZoom: false,
   staticGraph: false,
   width: 600,
   d3: {
@@ -87,11 +86,8 @@ export interface GraphData {
 type GraphMode = 'Single' | 'All'
 interface IState {
   mode: GraphMode
-  graphDataForWordsInVocabulary: {
-    [word: string]: GraphData
-  }
-
   dataToRender?: GraphData
+  lastClicked?: { x: number; y: number }
 }
 interface IProps {
   wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
@@ -108,7 +104,6 @@ class WordGraph extends React.Component<IProps, IState> {
     super(props)
     this.state = {
       mode: 'All',
-      graphDataForWordsInVocabulary: this.calculateGraphData(),
     }
   }
 
@@ -136,20 +131,16 @@ class WordGraph extends React.Component<IProps, IState> {
     newSelectedWord?: string,
   ): void => {
     this.setState({ mode: modeForThisButton })
-    const { graphDataForWordsInVocabulary } = this.state
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
 
     let dataToRender: GraphData
     if (modeForThisButton === 'Single') {
       const selectedWord = newSelectedWord || 'méo xệch'
 
-      dataToRender =
-        (graphDataForWordsInVocabulary &&
-          graphDataForWordsInVocabulary[selectedWord]) ||
-        getGraphDataForCompoundWord(
-          selectedWord,
-          wordsWithoutSpacesMappedToCompoundWords,
-        )
+      dataToRender = getGraphDataForCompoundWord(
+        selectedWord,
+        wordsWithoutSpacesMappedToCompoundWords,
+      )
     } else {
       const allData: GraphData[] = values(this.calculateGraphData())
       dataToRender = {
@@ -162,7 +153,7 @@ class WordGraph extends React.Component<IProps, IState> {
   }
   onClickNode = (idOfNodeClicked: string) => {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
-    const { dataToRender } = this.state
+    const { dataToRender, lastClicked } = this.state
     const dataToAdd = compact(
       idOfNodeClicked
         .split(' ')
@@ -205,15 +196,24 @@ class WordGraph extends React.Component<IProps, IState> {
     )
 
     if (dataToRender) {
-      const [uniqueNodeToAdd] = nodesToAdd.filter(
+      const [uniqueNodeToAdd] = orderBy(
+        nodesToAdd.filter(
+          ({ id }) =>
+            !dataToRender.nodes.some(
+              ({ id: idAlreadyPresent }) => idAlreadyPresent === id,
+            ),
+        ),
         ({ id }) =>
-          !dataToRender.nodes.some(
-            ({ id: idAlreadyPresent }) => idAlreadyPresent === id,
-          ),
+          -1 *
+          dataToRender.nodes.filter(({ id: idAlreadyPresent }) =>
+            id.split(' ').some((sub) => idAlreadyPresent.includes(sub)),
+          ).length,
       )
 
       if (uniqueNodeToAdd) {
-        const nodes = dataToRender.nodes.concat([{ ...uniqueNodeToAdd }])
+        const nodes = dataToRender.nodes.concat([
+          { ...uniqueNodeToAdd, ...lastClicked },
+        ])
 
         const nodesWithHiddenAdjacent = nodes.map(({ id, ...rest }) => ({
           ...rest,
@@ -241,6 +241,7 @@ class WordGraph extends React.Component<IProps, IState> {
       }
     }
   }
+
   render() {
     const { mode, dataToRender } = this.state
     const {
@@ -254,7 +255,15 @@ class WordGraph extends React.Component<IProps, IState> {
     const { onClickNode } = this
     return (
       <div>
-        <div style={{ position: 'absolute', left: 0 }}>
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+          }}
+          onClick={(e) =>
+            this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
+          }
+        >
           {dataToRender && dataToRender.nodes.length ? (
             <Graph
               onClickNode={onClickNode}

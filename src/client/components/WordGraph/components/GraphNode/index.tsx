@@ -7,9 +7,10 @@ export interface IGraphNode {
 }
 
 const GraphNode = ({ hiddenAdjacentNodes, color, id }: IGraphNode) => {
-  const hiddenAdjacentNodesCount = hiddenAdjacentNodes
-    ? hiddenAdjacentNodes.length
-    : 0
+  const hiddenAdjacentNodesCount =
+    hiddenAdjacentNodes && hiddenAdjacentNodes.length
+      ? hiddenAdjacentNodes.length
+      : ''
   return (
     <div
       title={`${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`}
