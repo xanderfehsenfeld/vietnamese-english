@@ -3,7 +3,7 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary, Definition } from 'model'
-import { pickBy, map, orderBy, uniqBy, flatten, uniq } from 'lodash'
+import { pickBy, map, orderBy, uniqBy } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 import { VocabularyContainer } from '../Vocabulary'
 
@@ -100,34 +100,50 @@ const Search = () => (
       { state, onChange, toggleShowExample }: AppContainer,
       { state: vocabularyState, selectWord }: VocabularyContainer,
     ) => {
-      const { showExample } = state
+      const { showExample, query, isFetching, subwordSuggestions } = state
       const { selectedWord, savedWords } = vocabularyState
+
+      let suggestions = subwordSuggestions
+
       return (
         <div
           style={{
             height: '100%',
             overflowY: 'hidden',
             maxHeight: 'calc(100vh - 74px) ',
-            padding: 3,
           }}
         >
-          <div className="md-form mt-0">
+          <div
+            className="md-form mt-0"
+            style={{
+              paddingRight: 14,
+              paddingLeft: 14,
+              paddingTop: 3,
+              paddingBottom: 3,
+            }}
+          >
             <input
               className="form-control"
               type="text"
-              disabled={state.isFetching}
+              disabled={isFetching}
               placeholder={
-                state.isFetching ? 'Fetching...' : 'Search to add words...'
+                isFetching ? 'Fetching...' : 'Search to add words...'
               }
               aria-label="Search"
               onChange={(e) => onChange(e.target.value)}
-              value={state.query}
+              value={query}
             />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            {state.subwordSuggestions &&
-            state.subwordSuggestions.length !== 0 ? (
-              <React.Fragment>
+          {suggestions && suggestions.length !== 0 ? (
+            <React.Fragment>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-end',
+                  paddingRight: 14,
+                  paddingLeft: 14,
+                }}
+              >
                 <input
                   style={{ marginTop: 10 }}
                   checked={showExample}
@@ -139,54 +155,54 @@ const Search = () => (
                 <label data-for={'t'} style={{ margin: 5 }}>
                   show example
                 </label>
-              </React.Fragment>
-            ) : null}
-          </div>
-          {state.subwordSuggestions && state.subwordSuggestions.length ? (
-            <div
-              style={{
-                height: '100%',
-                overflowY: 'auto',
-                border: 'solid 1px #dee2e6',
-              }}
-            >
-              {!state.selectedWord &&
-                state.subwordSuggestions &&
-                state.subwordSuggestions.slice(0, 15).map((v) => (
-                  <div
-                    key={v.text}
-                    className={'suggestion'}
-                    style={{
-                      cursor: 'pointer',
-                      paddingBottom: 4,
-                      paddingTop: 3,
-                    }}
-                    onClick={() => {
-                      onChange(v.text)
-                      if (savedWords.includes(v.text)) {
-                        selectWord(v.text)
-                      }
-                    }}
-                    title={'click to refine search'}
-                  >
-                    <DefinitionPage
-                      definitions={v.definitions}
-                      text={v.text}
-                      showExample={showExample}
-                      isSelected={v.text === selectedWord}
+              </div>
+
+              <div
+                style={{
+                  height: '100%',
+                  overflowY: 'auto',
+                  padding: 14,
+                }}
+              >
+                {suggestions &&
+                  suggestions.slice(0, 15).map((suggestion) => (
+                    <div
+                      key={suggestion.text}
+                      className={'suggestion'}
+                      style={{
+                        cursor: 'pointer',
+                        paddingBottom: 4,
+                        paddingTop: 3,
+                      }}
+                      onClick={() => {
+                        onChange(suggestion.text)
+                        if (savedWords.includes(suggestion.text)) {
+                          selectWord(suggestion.text)
+                        }
+                      }}
+                      title={'click to refine search'}
                     >
-                      {v.text.substring(0, v.start)}
-                      <strong>
-                        {v.text.substring(
-                          v.start,
-                          v.start + state.query.length,
+                      <DefinitionPage
+                        definitions={suggestion.definitions}
+                        text={suggestion.text}
+                        showExample={showExample}
+                        isSelected={suggestion.text === selectedWord}
+                      >
+                        {suggestion.text.substring(0, suggestion.start)}
+                        <strong>
+                          {suggestion.text.substring(
+                            suggestion.start,
+                            suggestion.start + query.length,
+                          )}
+                        </strong>
+                        {suggestion.text.substring(
+                          suggestion.start + query.length,
                         )}
-                      </strong>
-                      {v.text.substring(v.start + state.query.length)}
-                    </DefinitionPage>
-                  </div>
-                ))}
-            </div>
+                      </DefinitionPage>
+                    </div>
+                  ))}
+              </div>
+            </React.Fragment>
           ) : null}
         </div>
       )

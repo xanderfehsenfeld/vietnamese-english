@@ -246,15 +246,15 @@ class WordGraph extends React.Component<IProps, IState> {
           className={'container-fluid'}
           style={{ height: '100%', overflow: 'hidden' }}
         >
-          <div className={'row '}>
-            <div className={'col-md-4 '} style={{ overflowY: 'auto' }}>
+          <div className={'row no-gutters'}>
+            <div className={'col-md-5 '} style={{ overflowY: 'auto' }}>
               <Search />
             </div>
 
             <div
-              className={`col-md-8`}
+              className={`col-md-7 `}
               style={{
-                paddingTop: 5,
+                paddingTop: 1,
                 pointerEvents: 'none',
               }}
             >

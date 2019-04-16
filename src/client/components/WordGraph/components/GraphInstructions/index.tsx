@@ -8,17 +8,23 @@ const GraphInstructions = () => (
       'click a node to expand related words',
     ].map((instruction, i) => (
       <span
-        style={{ marginLeft: 10 }}
+        style={{ marginLeft: 14, marginBottom: 8 }}
         key={i}
         className="badge badge-secondary"
       >
         {instruction}
       </span>
     ))}
-    <span style={{ marginLeft: 10 }} className="badge badge-success">
+    <span
+      style={{ marginLeft: 14, marginBottom: 8 }}
+      className="badge badge-success"
+    >
       {'added'}
     </span>
-    <span style={{ marginLeft: 10 }} className="badge badge-warning">
+    <span
+      style={{ marginLeft: 14, marginBottom: 8 }}
+      className="badge badge-warning"
+    >
       {'not added'}
     </span>
   </h5>
