@@ -3,7 +3,6 @@ import * as React from 'react'
 import DefinitionPage from '../DefinitionPage'
 import { SearchContainer } from '../SearchPage'
 import axios from 'axios'
-import { values } from 'lodash'
 import { Link, Switch, Route } from 'react-router-dom'
 import VocabularyBadge from '../VocabularyBadge'
 

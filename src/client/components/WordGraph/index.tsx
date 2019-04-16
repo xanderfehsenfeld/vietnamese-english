@@ -1,15 +1,10 @@
 import * as React from 'react'
-import { Graph, Node } from 'react-d3-graph'
+import { Graph } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import { SearchContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { flatten, values, compact, orderBy } from 'lodash'
-import {
-  getGraphDataForCompoundWord,
-  filterUniqueLinks,
-  getHiddenAdjacentWords,
-} from './lib'
+import { getGraphDataWithNextNodeAdded } from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import SavedWordsView from './components/SavedWordsView'
 import withSizes from 'react-sizes'
@@ -83,9 +78,7 @@ export interface GraphData {
   nodes: IGraphNode[]
 }
 
-type GraphMode = 'Single' | 'All'
 interface IState {
-  mode: GraphMode
   dataToRender?: GraphData
   lastClicked?: { x: number; y: number }
 }
@@ -98,152 +91,69 @@ interface IProps {
   height: number
   width: number
 }
-
 class WordGraph extends React.Component<IProps, IState> {
-  constructor(props: IProps) {
-    super(props)
-    this.state = {
-      mode: 'All',
-    }
-  }
-
   componentDidMount = () => {
-    setTimeout(() => this.switchMode('Single'), 1000)
+    setTimeout(this.addInitialNodesForWord, 1000)
   }
-  calculateGraphData = () => {
-    const { savedWords, wordsWithoutSpacesMappedToCompoundWords } = this.props
+  state: IState = {}
+  addInitialNodesForWord = (newSelectedWord?: string): void => {
+    const selectedWord = newSelectedWord || 'méo xệch'
 
-    const graphDataForWordsInVocabulary = savedWords.reduce(
-      (acc, savedWord: string) => {
-        acc[savedWord] = getGraphDataForCompoundWord(
-          savedWord,
-          wordsWithoutSpacesMappedToCompoundWords,
-        )
-        return acc
-      },
-      {},
-    )
-    return graphDataForWordsInVocabulary
-  }
-
-  switchMode = (
-    modeForThisButton: GraphMode,
-    newSelectedWord?: string,
-  ): void => {
-    this.setState({ mode: modeForThisButton })
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
+    const { lastClicked } = this.state
 
-    let dataToRender: GraphData
-    if (modeForThisButton === 'Single') {
-      const selectedWord = newSelectedWord || 'méo xệch'
+    const isCompoundWord = selectedWord.includes(' ')
 
-      dataToRender = getGraphDataForCompoundWord(
-        selectedWord,
-        wordsWithoutSpacesMappedToCompoundWords,
-      )
-    } else {
-      const allData: GraphData[] = values(this.calculateGraphData())
-      dataToRender = {
-        nodes: flatten(allData.map(({ nodes }) => nodes)),
-        links: flatten(allData.map(({ links }) => links)),
-      }
+    const initialGraphData = {
+      nodes: [
+        { color: isCompoundWord ? 'green' : 'magenta', id: selectedWord },
+      ],
+      links: [{ source: selectedWord, target: selectedWord }],
     }
 
-    this.setState({ dataToRender })
+    const dataToRender = getGraphDataWithNextNodeAdded(
+      selectedWord,
+      initialGraphData,
+      wordsWithoutSpacesMappedToCompoundWords,
+      lastClicked,
+    )
+
+    this.setState({
+      dataToRender: this.populateGraphDataWithDefinitions(dataToRender),
+    })
   }
+
+  populateGraphDataWithDefinitions = (graphData: GraphData): GraphData => {
+    const { dictionary } = this.props
+
+    graphData.nodes = graphData.nodes.map(({ id, ...rest }) => ({
+      definitions: dictionary[id],
+      id,
+      ...rest,
+    }))
+
+    return graphData
+  }
+
   onClickNode = (idOfNodeClicked: string) => {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
-    const { dataToRender, lastClicked } = this.state
-    const dataToAdd = compact(
-      idOfNodeClicked
-        .split(' ')
-        .filter((v) => v)
-        .map((subword) => {
-          const neighbors = wordsWithoutSpacesMappedToCompoundWords[subword]
-          if (neighbors) {
-            if (subword !== idOfNodeClicked) {
-              return {
-                nodes: [
-                  {
-                    id: subword,
-                    color: 'magenta',
-                  },
-                ],
-                links: [
-                  {
-                    source: idOfNodeClicked,
-                    target: subword,
-                  },
-                ],
-              }
-            } else {
-              const nodes = neighbors.map((id) => ({ id, color: 'green' }))
-              const links = neighbors.map((id) => ({
-                source: id,
-                target: subword,
-              }))
-              return { nodes, links }
-            }
-          }
-          return undefined
-        }),
+    const { dataToRender: previousData, lastClicked } = this.state
+
+    const nextDataToRender = getGraphDataWithNextNodeAdded(
+      idOfNodeClicked,
+      previousData,
+      wordsWithoutSpacesMappedToCompoundWords,
+      lastClicked,
     )
-    const nodesToAdd: IGraphNode[] = flatten(
-      dataToAdd.map(({ nodes }) => nodes),
-    )
-    const linksToAdd: IGraphLink[] = flatten(
-      dataToAdd.map(({ links }) => links),
-    )
-
-    if (dataToRender) {
-      const [uniqueNodeToAdd] = orderBy(
-        nodesToAdd.filter(
-          ({ id }) =>
-            !dataToRender.nodes.some(
-              ({ id: idAlreadyPresent }) => idAlreadyPresent === id,
-            ),
-        ),
-        ({ id }) =>
-          -1 *
-          dataToRender.nodes.filter(({ id: idAlreadyPresent }) =>
-            id.split(' ').some((sub) => idAlreadyPresent.includes(sub)),
-          ).length,
-      )
-
-      if (uniqueNodeToAdd) {
-        const nodes = dataToRender.nodes.concat([
-          { ...uniqueNodeToAdd, ...lastClicked },
-        ])
-
-        const nodesWithHiddenAdjacent = nodes.map(({ id, ...rest }) => ({
-          ...rest,
-          id,
-          hiddenAdjacentNodes: getHiddenAdjacentWords(
-            id,
-            wordsWithoutSpacesMappedToCompoundWords,
-            nodes.map(({ id }) => id),
-          ),
-        }))
-
-        const links = filterUniqueLinks(
-          dataToRender.links
-            .concat(linksToAdd)
-            .filter(
-              ({ source, target }) =>
-                nodes.some(({ id }) => source === id) &&
-                nodes.some(({ id }) => target === id),
-            ),
-        )
-
-        this.setState({
-          dataToRender: { nodes: nodesWithHiddenAdjacent, links },
-        })
-      }
+    if (previousData) {
+      this.setState({
+        dataToRender: this.populateGraphDataWithDefinitions(nextDataToRender),
+      })
     }
   }
 
   render() {
-    const { mode, dataToRender } = this.state
+    const { dataToRender } = this.state
     const {
       dictionary,
       savedWords,
@@ -259,6 +169,7 @@ class WordGraph extends React.Component<IProps, IState> {
           style={{
             position: 'absolute',
             left: 0,
+            cursor: 'grab',
           }}
           onClick={(e) =>
             this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
@@ -267,7 +178,7 @@ class WordGraph extends React.Component<IProps, IState> {
           {dataToRender && dataToRender.nodes.length ? (
             <Graph
               onClickNode={onClickNode}
-              key={selectedWord + mode + JSON.stringify(savedWords)}
+              key={selectedWord + JSON.stringify(savedWords)}
               id="graph-id"
               data={dataToRender}
               config={{ ...config, height: height - 73, width: width - 10 }}
@@ -279,38 +190,15 @@ class WordGraph extends React.Component<IProps, IState> {
             <div className={'col-md-3 '}>
               {dictionary && savedWords ? (
                 <SavedWordsView
-                  selectWord={(v) => {
-                    selectWord(v)
-                    this.switchMode('Single', v)
+                  selectWord={(nextSelectedWord) => {
+                    selectWord(nextSelectedWord)
+                    this.addInitialNodesForWord(nextSelectedWord)
                   }}
                   selectedWord={selectedWord || ''}
                   dictionary={dictionary}
                   savedWords={savedWords}
                 />
               ) : null}{' '}
-              {savedWords.length ? (
-                <div
-                  className="btn-group"
-                  role="group"
-                  aria-label="Basic example"
-                  style={{ paddingTop: 5 }}
-                >
-                  {['Single', 'All'].map((modeForThisButton, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => this.switchMode(modeForThisButton)}
-                      type="button"
-                      className={`btn ${
-                        mode === modeForThisButton
-                          ? 'btn-primary'
-                          : 'btn-secondary'
-                      }`}
-                    >
-                      {modeForThisButton}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
 
             <div

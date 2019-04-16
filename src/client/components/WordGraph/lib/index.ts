@@ -1,5 +1,6 @@
-import { GraphData, IGraphLink } from '..'
-import { flatten, uniqBy, uniq } from 'lodash'
+import { IGraphLink, GraphData } from '..'
+import { uniqBy, compact, flatten, orderBy } from 'lodash'
+import { IGraphNode } from '../components/GraphNode'
 
 export const filterUniqueLinks = (links: IGraphLink[]) => {
   const alreadySeen: { [key: string]: boolean } = {}
@@ -17,28 +18,6 @@ export const filterUniqueLinks = (links: IGraphLink[]) => {
       }
     },
   )
-}
-
-const getMagentaNode = (id: string) => ({
-  id,
-  color: 'magenta',
-})
-
-const getGreenNode = (id: string) => ({
-  id,
-  color: 'green',
-})
-
-const getAdjacentWords = (
-  wordWithNoSpaces: string,
-  subWordMappedToCompoundWords: { [key: string]: string[] },
-) => {
-  let adjacentWords = subWordMappedToCompoundWords[wordWithNoSpaces]
-  if (adjacentWords) {
-    return uniq([wordWithNoSpaces])
-  } else {
-    return []
-  }
 }
 
 export const getHiddenAdjacentWords = (
@@ -70,57 +49,94 @@ export const getHiddenAdjacentWords = (
   }
 }
 
-export const getGraphDataForCompoundWord = (
-  compoundWord: string,
-  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] },
+export const getGraphDataWithNextNodeAdded = (
+  idOfNodeClicked: string,
+  currentGraphState: GraphData,
+  wordsWithoutSpacesMappedToCompoundWords: {
+    [key: string]: string[]
+  },
+  lastClicked?: {
+    x: number
+    y: number
+  },
 ): GraphData => {
-  const adjacentWords = [
-    ...flatten(
-      compoundWord
-        .split(' ')
-        .map((x) =>
-          getAdjacentWords(x, wordsWithoutSpacesMappedToCompoundWords),
+  const dataToAdd = compact(
+    idOfNodeClicked
+      .split(' ')
+      .filter((v) => v)
+      .map((subword) => {
+        const neighbors = wordsWithoutSpacesMappedToCompoundWords[subword]
+        if (neighbors) {
+          if (subword !== idOfNodeClicked) {
+            return {
+              nodes: [
+                {
+                  id: subword,
+                  color: 'magenta',
+                },
+              ],
+              links: [
+                {
+                  source: idOfNodeClicked,
+                  target: subword,
+                },
+              ],
+            }
+          } else {
+            const nodes = neighbors.map((id) => ({ id, color: 'green' }))
+            const links = neighbors.map((id) => ({
+              source: id,
+              target: subword,
+            }))
+            return { nodes, links }
+          }
+        }
+        return undefined
+      }),
+  )
+  const nodesToAdd: IGraphNode[] = flatten(dataToAdd.map(({ nodes }) => nodes))
+  const linksToAdd: IGraphLink[] = flatten(dataToAdd.map(({ links }) => links))
+
+  const [uniqueNodeToAdd] = orderBy(
+    nodesToAdd.filter(
+      ({ id }) =>
+        !currentGraphState.nodes.some(
+          ({ id: idAlreadyPresent }) => idAlreadyPresent === id,
         ),
     ),
-    compoundWord,
-  ]
-
-  const compoundWords = adjacentWords.filter(
-    (wordText) => wordText.split(' ').length !== 1,
+    ({ id }) =>
+      -1 *
+      currentGraphState.nodes.filter(({ id: idAlreadyPresent }) =>
+        id.split(' ').some((sub) => idAlreadyPresent.includes(sub)),
+      ).length,
   )
-  const singularWords = adjacentWords.filter(
-    (wordText) => wordText.split(' ').length === 1,
-  )
-  const compoundNodes = compoundWords.map((wordText) => {
-    return {
-      ...getGreenNode(wordText),
-      hiddenAdjacentNodes: getHiddenAdjacentWords(
-        wordText,
-        wordsWithoutSpacesMappedToCompoundWords,
-        adjacentWords,
-      ),
-    }
-  })
 
-  const singularNodes = singularWords
-    .map(getMagentaNode)
-    .map(({ id, ...rest }) => ({
-      id,
+  if (uniqueNodeToAdd) {
+    const nodes = currentGraphState.nodes.concat([
+      { ...uniqueNodeToAdd, ...lastClicked },
+    ])
+
+    const nodesWithHiddenAdjacent = nodes.map(({ id, ...rest }) => ({
       ...rest,
+      id,
       hiddenAdjacentNodes: getHiddenAdjacentWords(
         id,
         wordsWithoutSpacesMappedToCompoundWords,
-        adjacentWords,
+        nodes.map(({ id }) => id),
       ),
     }))
 
-  const nodes = uniqBy([...singularNodes, ...compoundNodes], ({ id }) => id)
+    const links = filterUniqueLinks(
+      currentGraphState.links
+        .concat(linksToAdd)
+        .filter(
+          ({ source, target }) =>
+            nodes.some(({ id }) => source === id) &&
+            nodes.some(({ id }) => target === id),
+        ),
+    )
 
-  const links: IGraphLink[] = filterUniqueLinks(
-    singularWords.map((singularWord) => ({
-      target: singularWord,
-      source: compoundWord,
-    })),
-  )
-  return { links, nodes }
+    return { nodes: nodesWithHiddenAdjacent, links }
+  }
+  return currentGraphState
 }

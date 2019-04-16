@@ -39,7 +39,9 @@ const SavedWordsView = ({
               paddingBottom: 4,
               paddingTop: 3,
             }}
-            onClick={() => selectWord(text)}
+            onClick={() =>
+              text === selectedWord ? selectWord('') : selectWord(text)
+            }
           >
             <div
               style={{

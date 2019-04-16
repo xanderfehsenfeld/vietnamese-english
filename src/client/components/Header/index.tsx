@@ -37,10 +37,10 @@ const Header = () => (
               <Link to={'/'}>Search</Link>
             </span>
             <span className="p-2 text-dark">
-              <Link to={'/vocabulary'}>Vocabulary</Link> <VocabularyBadge />
+              <Link to={'/graph'}>Graph</Link>
             </span>
             <span className="p-2 text-dark">
-              <Link to={'/graph'}>Graph</Link>
+              <Link to={'/vocabulary'}>Vocabulary</Link> <VocabularyBadge />
             </span>
             <span className="p-2 text-dark ">
               {state.displayName && `${state.displayName.split(' ')[0]}`}
