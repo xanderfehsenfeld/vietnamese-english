@@ -12,6 +12,7 @@ export interface IGraphNode {
 
 interface IProps {
   definitions?: Definition[]
+  removeself: (id: string) => void
 }
 
 const GraphNode = ({
@@ -19,6 +20,7 @@ const GraphNode = ({
   color,
   id,
   definitions,
+  removeself,
 }: IGraphNode & IProps) => {
   const hiddenAdjacentNodesCount =
     hiddenAdjacentNodes && hiddenAdjacentNodes.length
@@ -30,23 +32,36 @@ const GraphNode = ({
     <Subscribe to={[VocabularyContainer]}>
       {({ state }: VocabularyContainer) => {
         const { selectedWord } = state
+        const isSelected = selectedWord === id
+
         return (
           <React.Fragment>
             <div
               title={`${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`}
               className={`definition-graph-node ${
-                selectedWord === id ? 'isSelected' : ''
+                isSelected ? 'isSelected' : ''
               }`}
               style={{ backgroundColor: color }}
             >
               {hiddenAdjacentNodesCount}
             </div>
-            <span
-              style={{ fontSize: 8, position: 'absolute' }}
-              title={definition}
-            >
-              {definition}
-            </span>
+            {isSelected ? null : (
+              <span
+                style={{ fontSize: 8, position: 'absolute' }}
+                title={definition}
+              >
+                {definition}
+              </span>
+            )}
+            {isSelected ? (
+              <button
+                className={'btn btn-danger remove-node-button'}
+                onClick={(e) => {
+                  removeself(id)
+                  e.stopPropagation()
+                }}
+              />
+            ) : null}
           </React.Fragment>
         )
       }}

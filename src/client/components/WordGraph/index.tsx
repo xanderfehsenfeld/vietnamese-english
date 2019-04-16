@@ -7,7 +7,7 @@ import { Dictionary } from '../../../model'
 import {
   getGraphDataWithNextNodeAdded,
   mergeGraphDatas,
-  removeNode,
+  removeNodeFromGraphData,
 } from './lib'
 import GraphInstructions from './components/GraphInstructions'
 import withSizes from 'react-sizes'
@@ -52,7 +52,6 @@ const config: IReactD3Config = {
     strokeWidth: 1.5,
     svg: '',
     symbolType: 'circle',
-    viewGenerator: GraphNode,
   },
   link: {
     color: '#d3d3d3',
@@ -108,7 +107,6 @@ class WordGraph extends React.Component<IProps, IState> {
   }
   componentWillReceiveProps = ({ savedWords: nextSavedWords }: IProps) => {
     const { savedWords } = this.props
-    const { dataToRender } = this.state
     if (nextSavedWords.length > savedWords.length) {
       const addedWord = nextSavedWords.find((v) => !savedWords.includes(v))
       if (addedWord) {
@@ -116,10 +114,17 @@ class WordGraph extends React.Component<IProps, IState> {
       }
     } else if (nextSavedWords.length < this.props.savedWords.length) {
       const removedWord = savedWords.find((v) => !nextSavedWords.includes(v))
-      if (removedWord && dataToRender) {
-        const nextData = removeNode(removedWord, dataToRender)
-        this.setState({ dataToRender: nextData })
+      if (removedWord) {
+        this.removeNode(removedWord)
       }
+    }
+  }
+
+  removeNode = (id: string) => {
+    const { dataToRender } = this.state
+    if (dataToRender) {
+      const nextData = removeNodeFromGraphData(id, dataToRender)
+      this.setState({ dataToRender: nextData })
     }
   }
   addInitialNodesForWord = (word: string): void => {
@@ -130,7 +135,7 @@ class WordGraph extends React.Component<IProps, IState> {
 
     const initialGraphData = {
       nodes: [{ id: word }],
-      links: [{ source: word, target: word }],
+      links: [],
     }
 
     const graphDataMergedWithPrevious = previousDataToRender
@@ -201,6 +206,10 @@ class WordGraph extends React.Component<IProps, IState> {
     if (dataToRender) {
       dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
     }
+
+    config.node.viewGenerator = (props: IGraphNode) => (
+      <GraphNode {...props} removeself={this.removeNode} />
+    )
     return (
       <div>
         <div
@@ -225,7 +234,11 @@ class WordGraph extends React.Component<IProps, IState> {
               }}
               id="graph-id"
               data={dataToRender}
-              config={{ ...config, height: height - 73, width: width - 10 }}
+              config={{
+                ...config,
+                height: height - 73,
+                width: width - 10,
+              }}
             />
           ) : null}
         </div>

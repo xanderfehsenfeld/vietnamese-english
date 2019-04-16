@@ -25,7 +25,7 @@ interface NodeConfig {
   strokeWidth: number
   svg: string
   symbolType: string
-  viewGenerator: ({ hiddenAdjacentNodes, color }: IGraphNode) => JSX.Element
+  viewGenerator?: ({ hiddenAdjacentNodes, color }: IGraphNode) => JSX.Element
 }
 
 interface LinkConfig {

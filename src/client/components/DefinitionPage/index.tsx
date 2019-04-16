@@ -107,7 +107,7 @@ const DefinitionPage = ({
               </button>
             )}
             {isSelected && (
-              <button disabled className={'btn btn-success'}>
+              <button disabled className={'btn btn-primary'}>
                 Selected
               </button>
             )}

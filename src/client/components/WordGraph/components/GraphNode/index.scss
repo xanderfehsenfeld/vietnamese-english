@@ -18,3 +18,22 @@
     padding: 13px;
   }
 }
+
+.remove-node-button {
+  background-color: #dc3545;
+  color: white;
+  background-color: #dc3545;
+  position: absolute;
+  border-radius: 50% !important;
+  width: 20px;
+  height: 20px;
+  padding: 0 0 0 6px !important;
+  right: 26px;
+  top: 31px;
+  &:after {
+    content: 'x';
+    position: absolute;
+    left: 5px;
+    top: -4px;
+  }
+}

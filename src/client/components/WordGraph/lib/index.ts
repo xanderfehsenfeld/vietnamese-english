@@ -48,11 +48,13 @@ const getHiddenAdjacentWords = (
     })
   }
 }
-export const removeNode = (
+export const removeNodeFromGraphData = (
   toRemove: string,
   graphData: IGraphData,
 ): IGraphData => {
-  const nodes = graphData.nodes.filter(({ id }) => id !== toRemove)
+  const nodesWhichAreNotToRemove = graphData.nodes.filter(
+    ({ id }) => id !== toRemove,
+  )
   const links = graphData.links.filter(
     ({ source, target }) => source !== toRemove && target !== toRemove,
   )
@@ -67,7 +69,11 @@ export const removeNode = (
           'green',
     )
 
-  return { nodes: nodes.filter(({ id }) => !nodesToRemove.includes(id)), links }
+  const nodes = nodesWhichAreNotToRemove.filter(
+    ({ id }) => !nodesToRemove.includes(id),
+  )
+
+  return { nodes, links: links }
 }
 export const mergeGraphDatas = (a: IGraphData, b: IGraphData): IGraphData => {
   const nodes = uniqBy(a.nodes.concat(b.nodes), ({ id }) => id)
@@ -82,7 +88,14 @@ export const mergeGraphDatas = (a: IGraphData, b: IGraphData): IGraphData => {
       ),
   )
 
-  return { nodes, links }
+  return {
+    nodes,
+    links: links.filter(
+      ({ source, target }) =>
+        nodes.some(({ id }) => source === id) &&
+        nodes.some(({ id }) => target === id),
+    ),
+  }
 }
 
 export const getGraphDataWithNextNodeAdded = (
