@@ -1,5 +1,8 @@
 import * as React from 'react'
 import { Definition } from '../../../../../model'
+import { VocabularyContainer } from '../../../Vocabulary'
+import { Subscribe } from 'unstated'
+import './index.scss'
 
 export interface IGraphNode {
   id: string
@@ -24,28 +27,30 @@ const GraphNode = ({
 
   const definition = definitions ? definitions[0].definition : ''
   return (
-    <React.Fragment>
-      <div
-        title={`${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`}
-        style={{
-          width: 35,
-          height: 35,
-          backgroundColor: color,
-          margin: 'auto',
-          marginTop: 31,
-          borderRadius: '50%',
-          padding: 7,
-          color: 'white',
-          fontWeight: 'bold',
-          textAlign: 'center',
-        }}
-      >
-        {hiddenAdjacentNodesCount}
-      </div>
-      <span style={{ fontSize: 8, position: 'absolute' }} title={definition}>
-        {definition}
-      </span>
-    </React.Fragment>
+    <Subscribe to={[VocabularyContainer]}>
+      {({ state }: VocabularyContainer) => {
+        const { selectedWord } = state
+        return (
+          <React.Fragment>
+            <div
+              title={`${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`}
+              className={`definition-graph-node ${
+                selectedWord === id ? 'isSelected' : ''
+              }`}
+              style={{ backgroundColor: color }}
+            >
+              {hiddenAdjacentNodesCount}
+            </div>
+            <span
+              style={{ fontSize: 8, position: 'absolute' }}
+              title={definition}
+            >
+              {definition}
+            </span>
+          </React.Fragment>
+        )
+      }}
+    </Subscribe>
   )
 }
 

@@ -25,7 +25,7 @@ interface IState {
 const removeAccents = (str: string) =>
   str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
-export class SearchContainer extends Container<IState> {
+export class AppContainer extends Container<IState> {
   state: IState = {
     query: '',
     isFetching: false,
@@ -95,19 +95,29 @@ export class SearchContainer extends Container<IState> {
 }
 
 const Search = () => (
-  <Subscribe to={[SearchContainer, VocabularyContainer]}>
-    {({ state, onChange, toggleShowExample }: SearchContainer) => {
+  <Subscribe to={[AppContainer, VocabularyContainer]}>
+    {(
+      { state, onChange, toggleShowExample }: AppContainer,
+      { state: vocabularyState, selectWord }: VocabularyContainer,
+    ) => {
       const { showExample } = state
+      const { selectedWord, savedWords } = vocabularyState
       return (
-        <div style={{ height: '100%' }}>
-          <h3>Search</h3>
+        <div
+          style={{
+            height: '100%',
+            overflowY: 'hidden',
+            maxHeight: 'calc(100vh - 74px) ',
+            padding: 3,
+          }}
+        >
           <div className="md-form mt-0">
             <input
               className="form-control"
               type="text"
               disabled={state.isFetching}
               placeholder={
-                state.isFetching ? 'Fetching...' : 'Search vietnamese words...'
+                state.isFetching ? 'Fetching...' : 'Search to add words...'
               }
               aria-label="Search"
               onChange={(e) => onChange(e.target.value)}
@@ -132,38 +142,52 @@ const Search = () => (
               </React.Fragment>
             ) : null}
           </div>
-          <div>
-            {!state.selectedWord &&
-              state.subwordSuggestions &&
-              state.subwordSuggestions.slice(0, 15).map((v) => (
-                <div
-                  key={v.text}
-                  className={'suggestion'}
-                  style={{
-                    cursor: 'pointer',
-                    paddingBottom: 4,
-                    paddingTop: 3,
-                  }}
-                  onClick={() => {
-                    onChange(v.text)
-                  }}
-                  title={'click to refine search'}
-                >
-                  <DefinitionPage
-                    definitions={v.definitions}
-                    text={v.text}
-                    showExample={showExample}
-                    showRemoveButton={false}
+          {state.subwordSuggestions && state.subwordSuggestions.length ? (
+            <div
+              style={{
+                height: '100%',
+                overflowY: 'auto',
+                border: 'solid 1px #dee2e6',
+              }}
+            >
+              {!state.selectedWord &&
+                state.subwordSuggestions &&
+                state.subwordSuggestions.slice(0, 15).map((v) => (
+                  <div
+                    key={v.text}
+                    className={'suggestion'}
+                    style={{
+                      cursor: 'pointer',
+                      paddingBottom: 4,
+                      paddingTop: 3,
+                    }}
+                    onClick={() => {
+                      onChange(v.text)
+                      if (savedWords.includes(v.text)) {
+                        selectWord(v.text)
+                      }
+                    }}
+                    title={'click to refine search'}
                   >
-                    {v.text.substring(0, v.start)}
-                    <strong>
-                      {v.text.substring(v.start, v.start + state.query.length)}
-                    </strong>
-                    {v.text.substring(v.start + state.query.length)}
-                  </DefinitionPage>
-                </div>
-              ))}
-          </div>
+                    <DefinitionPage
+                      definitions={v.definitions}
+                      text={v.text}
+                      showExample={showExample}
+                      isSelected={v.text === selectedWord}
+                    >
+                      {v.text.substring(0, v.start)}
+                      <strong>
+                        {v.text.substring(
+                          v.start,
+                          v.start + state.query.length,
+                        )}
+                      </strong>
+                      {v.text.substring(v.start + state.query.length)}
+                    </DefinitionPage>
+                  </div>
+                ))}
+            </div>
+          ) : null}
         </div>
       )
     }}

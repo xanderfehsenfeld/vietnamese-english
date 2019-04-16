@@ -15,6 +15,12 @@ const GraphInstructions = () => (
         {instruction}
       </span>
     ))}
+    <span style={{ marginLeft: 10 }} className="badge badge-success">
+      {'added'}
+    </span>
+    <span style={{ marginLeft: 10 }} className="badge badge-warning">
+      {'not added'}
+    </span>
   </h5>
 )
 

@@ -34,10 +34,7 @@ const Header = () => (
           </h5>
           <nav className="my-2 my-md-0 mr-md-3">
             <span className="p-2 text-dark">
-              <Link to={'/'}>Search</Link>
-            </span>
-            <span className="p-2 text-dark">
-              <Link to={'/graph'}>Graph</Link>
+              <Link to={'/'}>Graph</Link>
             </span>
             <span className="p-2 text-dark">
               <Link to={'/vocabulary'}>Vocabulary</Link> <VocabularyBadge />

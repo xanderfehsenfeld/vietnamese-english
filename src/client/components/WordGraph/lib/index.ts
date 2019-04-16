@@ -1,8 +1,8 @@
-import { IGraphLink, GraphData } from '..'
+import { IGraphLink, IGraphData } from '..'
 import { uniqBy, compact, flatten, orderBy } from 'lodash'
 import { IGraphNode } from '../components/GraphNode'
 
-export const filterUniqueLinks = (links: IGraphLink[]) => {
+const filterUniqueLinks = (links: IGraphLink[]) => {
   const alreadySeen: { [key: string]: boolean } = {}
 
   return uniqBy(links, ({ source, target }) => source + target).filter(
@@ -20,7 +20,7 @@ export const filterUniqueLinks = (links: IGraphLink[]) => {
   )
 }
 
-export const getHiddenAdjacentWords = (
+const getHiddenAdjacentWords = (
   word: string,
   wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] },
   alreadyDisplayedWords: string[],
@@ -48,10 +48,46 @@ export const getHiddenAdjacentWords = (
     })
   }
 }
+export const removeNode = (
+  toRemove: string,
+  graphData: IGraphData,
+): IGraphData => {
+  const nodes = graphData.nodes.filter(({ id }) => id !== toRemove)
+  const links = graphData.links.filter(
+    ({ source, target }) => source !== toRemove && target !== toRemove,
+  )
+
+  const nodesToRemove = graphData.links
+    .filter(({ source, target }) => source === toRemove || target === toRemove)
+    .map(({ source, target }) => (source === toRemove ? target : source))
+    .filter(
+      (id) =>
+        !links.some(({ source, target }) => id === source || id === target) &&
+        graphData.nodes.find(({ id: idOfNode }) => idOfNode === id).color !==
+          'green',
+    )
+
+  return { nodes: nodes.filter(({ id }) => !nodesToRemove.includes(id)), links }
+}
+export const mergeGraphDatas = (a: IGraphData, b: IGraphData): IGraphData => {
+  const nodes = uniqBy(a.nodes.concat(b.nodes), ({ id }) => id)
+
+  const links = filterUniqueLinks(
+    a.links
+      .concat(b.links)
+      .filter(
+        ({ source, target }) =>
+          nodes.some(({ id }) => source === id) &&
+          nodes.some(({ id }) => target === id),
+      ),
+  )
+
+  return { nodes, links }
+}
 
 export const getGraphDataWithNextNodeAdded = (
   idOfNodeClicked: string,
-  currentGraphState: GraphData,
+  currentGraphState: IGraphData,
   wordsWithoutSpacesMappedToCompoundWords: {
     [key: string]: string[]
   },
@@ -59,7 +95,7 @@ export const getGraphDataWithNextNodeAdded = (
     x: number
     y: number
   },
-): GraphData => {
+): IGraphData => {
   const dataToAdd = compact(
     idOfNodeClicked
       .split(' ')
@@ -72,7 +108,6 @@ export const getGraphDataWithNextNodeAdded = (
               nodes: [
                 {
                   id: subword,
-                  color: 'magenta',
                 },
               ],
               links: [
@@ -83,7 +118,7 @@ export const getGraphDataWithNextNodeAdded = (
               ],
             }
           } else {
-            const nodes = neighbors.map((id) => ({ id, color: 'green' }))
+            const nodes = neighbors.map((id) => ({ id }))
             const links = neighbors.map((id) => ({
               source: id,
               target: subword,

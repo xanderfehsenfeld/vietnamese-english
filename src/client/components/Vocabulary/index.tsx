@@ -1,7 +1,7 @@
 import { Subscribe, Container } from 'unstated'
 import * as React from 'react'
 import DefinitionPage from '../DefinitionPage'
-import { SearchContainer } from '../SearchPage'
+import { AppContainer } from '../SearchPage'
 import axios from 'axios'
 import { Link, Switch, Route } from 'react-router-dom'
 import VocabularyBadge from '../VocabularyBadge'
@@ -19,11 +19,7 @@ export class VocabularyContainer extends Container<IState> {
     didInitialFetch: false,
   }
   selectWord = (word: string) => {
-    if (word === this.state.selectedWord) {
-      this.setState({ selectedWord: undefined })
-    } else {
-      this.setState({ selectedWord: word })
-    }
+    this.setState({ selectedWord: word })
   }
   persistState = async (state: any) => await axios.post('state', state)
   fetchState = async () => {
@@ -59,10 +55,10 @@ export class VocabularyContainer extends Container<IState> {
 }
 
 const Vocabulary = ({ compact = false }) => (
-  <Subscribe to={[VocabularyContainer, SearchContainer]}>
+  <Subscribe to={[VocabularyContainer, AppContainer]}>
     {(
       { state, selectWord }: VocabularyContainer,
-      { state: stateWithDictionary }: SearchContainer,
+      { state: stateWithDictionary }: AppContainer,
     ) => {
       const {
         savedWords,

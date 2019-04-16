@@ -1,12 +1,15 @@
 import * as React from 'react'
 import { Graph } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
-import { SearchContainer } from '../SearchPage'
+import Search, { AppContainer } from '../SearchPage'
 import { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
-import { getGraphDataWithNextNodeAdded } from './lib'
+import {
+  getGraphDataWithNextNodeAdded,
+  mergeGraphDatas,
+  removeNode,
+} from './lib'
 import GraphInstructions from './components/GraphInstructions'
-import SavedWordsView from './components/SavedWordsView'
 import withSizes from 'react-sizes'
 import { IReactD3Config } from './model'
 import GraphNode, { IGraphNode } from './components/GraphNode'
@@ -73,57 +76,81 @@ export interface IGraphLink {
   target: string
 }
 
-export interface GraphData {
+export interface IGraphData {
   links: IGraphLink[]
   nodes: IGraphNode[]
 }
 
 interface IState {
-  dataToRender?: GraphData
+  dataToRender?: IGraphData
   lastClicked?: { x: number; y: number }
 }
 interface IProps {
   wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
   savedWords: string[]
+  onChange: (word: string) => void
   selectWord: (word: string) => void
-  dictionary: Dictionary
   selectedWord?: string
+  dictionary: Dictionary
   height: number
   width: number
 }
 class WordGraph extends React.Component<IProps, IState> {
   componentDidMount = () => {
-    setTimeout(this.addInitialNodesForWord, 1000)
+    setTimeout(this.initializeWordsInVocabulary, 1000)
   }
   state: IState = {}
-  addInitialNodesForWord = (newSelectedWord?: string): void => {
-    const selectedWord = newSelectedWord || 'méo xệch'
+  initializeWordsInVocabulary = () => {
+    const { savedWords } = this.props
+    savedWords.forEach((word, i) =>
+      setTimeout(() => this.addInitialNodesForWord(word), 250 * i),
+    )
+  }
+  componentWillReceiveProps = ({ savedWords: nextSavedWords }: IProps) => {
+    const { savedWords } = this.props
+    const { dataToRender } = this.state
+    if (nextSavedWords.length > savedWords.length) {
+      const addedWord = nextSavedWords.find((v) => !savedWords.includes(v))
+      if (addedWord) {
+        this.addInitialNodesForWord(addedWord)
+      }
+    } else if (nextSavedWords.length < this.props.savedWords.length) {
+      const removedWord = savedWords.find((v) => !nextSavedWords.includes(v))
+      if (removedWord && dataToRender) {
+        const nextData = removeNode(removedWord, dataToRender)
+        this.setState({ dataToRender: nextData })
+      }
+    }
+  }
+  addInitialNodesForWord = (word: string): void => {
+    const { dataToRender: previousDataToRender } = this.state
 
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
     const { lastClicked } = this.state
 
-    const isCompoundWord = selectedWord.includes(' ')
-
     const initialGraphData = {
-      nodes: [
-        { color: isCompoundWord ? 'green' : 'magenta', id: selectedWord },
-      ],
-      links: [{ source: selectedWord, target: selectedWord }],
+      nodes: [{ id: word }],
+      links: [{ source: word, target: word }],
     }
 
+    const graphDataMergedWithPrevious = previousDataToRender
+      ? mergeGraphDatas(previousDataToRender, initialGraphData)
+      : initialGraphData
+
     const dataToRender = getGraphDataWithNextNodeAdded(
-      selectedWord,
-      initialGraphData,
+      word,
+      graphDataMergedWithPrevious,
       wordsWithoutSpacesMappedToCompoundWords,
       lastClicked,
     )
 
+    dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
     this.setState({
       dataToRender: this.populateGraphDataWithDefinitions(dataToRender),
     })
   }
 
-  populateGraphDataWithDefinitions = (graphData: GraphData): GraphData => {
+  populateGraphDataWithDefinitions = (graphData: IGraphData): IGraphData => {
     const { dictionary } = this.props
 
     graphData.nodes = graphData.nodes.map(({ id, ...rest }) => ({
@@ -133,6 +160,15 @@ class WordGraph extends React.Component<IProps, IState> {
     }))
 
     return graphData
+  }
+
+  addColorToNodes = (nodes: IGraphNode[]): IGraphNode[] => {
+    const { savedWords } = this.props
+    return nodes.map(({ id, ...rest }) => ({
+      id,
+      ...rest,
+      color: savedWords.includes(id) ? '#28a745' : '#ffc107',
+    }))
   }
 
   onClickNode = (idOfNodeClicked: string) => {
@@ -145,24 +181,26 @@ class WordGraph extends React.Component<IProps, IState> {
       wordsWithoutSpacesMappedToCompoundWords,
       lastClicked,
     )
+
+    const dataWithDefinitions = this.populateGraphDataWithDefinitions(
+      nextDataToRender,
+    )
+
+    dataWithDefinitions.nodes = this.addColorToNodes(dataWithDefinitions.nodes)
     if (previousData) {
       this.setState({
-        dataToRender: this.populateGraphDataWithDefinitions(nextDataToRender),
+        dataToRender: dataWithDefinitions,
       })
     }
   }
 
   render() {
     const { dataToRender } = this.state
-    const {
-      dictionary,
-      savedWords,
-      selectWord,
-      selectedWord,
-      height,
-      width,
-    } = this.props
+    const { height, width, onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
+    if (dataToRender) {
+      dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
+    }
     return (
       <div>
         <div
@@ -177,32 +215,31 @@ class WordGraph extends React.Component<IProps, IState> {
         >
           {dataToRender && dataToRender.nodes.length ? (
             <Graph
-              onClickNode={onClickNode}
-              key={selectedWord + JSON.stringify(savedWords)}
+              onClickNode={async (id: string) => {
+                if (selectedWord === id) {
+                  onClickNode(id)
+                } else {
+                  await onChange(id)
+                  selectWord(id)
+                }
+              }}
               id="graph-id"
               data={dataToRender}
               config={{ ...config, height: height - 73, width: width - 10 }}
             />
           ) : null}
         </div>
-        <div className={'container-fluid'}>
+        <div
+          className={'container-fluid'}
+          style={{ height: '100%', overflow: 'hidden' }}
+        >
           <div className={'row '}>
-            <div className={'col-md-3 '}>
-              {dictionary && savedWords ? (
-                <SavedWordsView
-                  selectWord={(nextSelectedWord) => {
-                    selectWord(nextSelectedWord)
-                    this.addInitialNodesForWord(nextSelectedWord)
-                  }}
-                  selectedWord={selectedWord || ''}
-                  dictionary={dictionary}
-                  savedWords={savedWords}
-                />
-              ) : null}{' '}
+            <div className={'col-md-4 '} style={{ overflowY: 'auto' }}>
+              <Search />
             </div>
 
             <div
-              className={`col-md-9`}
+              className={`col-md-8`}
               style={{
                 paddingTop: 5,
                 pointerEvents: 'none',
@@ -222,9 +259,9 @@ const mapSizesToProps = (sizes: any) => sizes
 const WordGraphWithDimensions = withSizes(mapSizesToProps)(WordGraph)
 
 const GraphWithContainers = () => (
-  <Subscribe to={[SearchContainer, VocabularyContainer]}>
+  <Subscribe to={[AppContainer, VocabularyContainer]}>
     {(
-      { state }: SearchContainer,
+      { state, onChange }: AppContainer,
       { state: vocabularyState, selectWord }: VocabularyContainer,
     ) => {
       const { dictionary, wordsWithoutSpacesMappedToCompoundWords } = state
@@ -234,13 +271,14 @@ const GraphWithContainers = () => (
       if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
         return (
           <WordGraphWithDimensions
-            selectedWord={selectedWord}
             dictionary={dictionary}
             wordsWithoutSpacesMappedToCompoundWords={
               wordsWithoutSpacesMappedToCompoundWords
             }
             savedWords={savedWords}
             selectWord={selectWord}
+            onChange={onChange}
+            selectedWord={selectedWord}
           />
         )
       } else {
