@@ -14,6 +14,7 @@ import {
   authRequired,
 } from './auth'
 import { values } from 'lodash'
+import translateRoutes from './translate'
 
 const DatastoreStore = require('@google-cloud/connect-datastore')(session)
 
@@ -34,6 +35,7 @@ app.use(passport.initialize())
 app.use(passport.session())
 app.use(bodyParser.json())
 app.use(oauth2Routes)
+app.use(translateRoutes)
 
 const datastore = new Datastore({
   projectId: 'vietnamese-english',
