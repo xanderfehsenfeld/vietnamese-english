@@ -8,7 +8,7 @@
     "node": ">=8"
   },
   "scripts": {
-    "dev": "node ./node_modules/nodemon/bin/nodemon.js --inspect=9229 fuse.js --watch fuse.js",
+    "dev": "GOOGLE_APPLICATION_CREDENTIALS=google-cloud-platform-service-account-key.json node ./node_modules/nodemon/bin/nodemon.js --inspect=9229 fuse.js --watch fuse.js",
     "build": "node fuse.js build",
     "deploy": "sh deploy.sh",
     "start": "node dist-prod/server/bundle.js",

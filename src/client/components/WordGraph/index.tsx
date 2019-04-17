@@ -87,13 +87,16 @@ interface IState {
   dataToRender?: IGraphData
   lastClicked?: { x: number; y: number }
 }
-interface IProps {
+
+interface IPropsFromUnstated {
   wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
   savedWords: string[]
   onChange: (word: string) => void
   selectWord: (word: string) => void
   selectedWord?: string
   dictionary: Dictionary
+}
+type IProps = IPropsFromUnstated & {
   height: number
   width: number
 }
@@ -284,18 +287,15 @@ const GraphWithContainers = () => (
       const { savedWords, selectedWord } = vocabularyState
 
       if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
-        return (
-          <WordGraphWithDimensions
-            dictionary={dictionary}
-            wordsWithoutSpacesMappedToCompoundWords={
-              wordsWithoutSpacesMappedToCompoundWords
-            }
-            savedWords={savedWords}
-            selectWord={selectWord}
-            onChange={onChange}
-            selectedWord={selectedWord}
-          />
-        )
+        const props: IPropsFromUnstated = {
+          wordsWithoutSpacesMappedToCompoundWords,
+          dictionary,
+          savedWords,
+          selectWord,
+          selectedWord,
+          onChange,
+        }
+        return <WordGraphWithDimensions {...props} />
       } else {
         return null
       }

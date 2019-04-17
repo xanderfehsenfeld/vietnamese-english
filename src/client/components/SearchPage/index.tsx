@@ -3,7 +3,7 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
-import { pickBy, map, orderBy, uniqBy } from 'lodash'
+import { pickBy, map, orderBy, uniqBy, uniq } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 import { VocabularyContainer } from '../Vocabulary'
 
@@ -93,29 +93,38 @@ export class AppContainer extends Container<IState> {
     this.setState({ query: changedQuery, selectedWord: undefined })
   }
   fetchTranslations = async (wordsToTranslate: string[]) => {
-    if (!wordsToTranslate.length) {
-      throw new Error('Expected  array of strings with length greater than 0!')
+    const { isFetchingTranslations, translationVietnameseEnglish } = this.state
+
+    if (isFetchingTranslations) {
+    } else if (wordsToTranslate.length) {
+      const wordsWithoutTranslation = uniq(
+        wordsToTranslate.filter((text) => !translationVietnameseEnglish[text]),
+      )
+
+      if (wordsWithoutTranslation.length) {
+        this.setState({ isFetchingTranslations: true })
+
+        const query = wordsWithoutTranslation.map((v) => `q=${v}`).join('&')
+        try {
+          const response: Translation[] = (await axios.get(
+            `translation?${query}`,
+          )).data
+
+          const { translationVietnameseEnglish } = this.state
+          const withAddedTranslations = { ...translationVietnameseEnglish }
+
+          response.forEach((translation) => {
+            withAddedTranslations[translation.vietnamese] = translation.english
+          })
+
+          this.setState({ translationVietnameseEnglish: withAddedTranslations })
+        } catch (e) {
+          console.log(e)
+        }
+
+        this.setState({ isFetchingTranslations: false })
+      }
     }
-    this.setState({ isFetchingTranslations: true })
-
-    const query = wordsToTranslate.map((v) => `q=${v}`).join('&')
-    try {
-      const response: Translation[] = (await axios.get(`translation?${query}`))
-        .data
-
-      const { translationVietnameseEnglish } = this.state
-      const withAddedTranslations = { ...translationVietnameseEnglish }
-
-      response.forEach((translation) => {
-        withAddedTranslations[translation.vietnamese] = translation.english
-      })
-
-      this.setState({ translationVietnameseEnglish: withAddedTranslations })
-    } catch (e) {
-      console.log(e)
-    }
-
-    this.setState({ isFetchingTranslations: false })
   }
 
   fetchDictionary = async () => {
