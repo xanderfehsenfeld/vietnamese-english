@@ -110,7 +110,7 @@ const Search = () => (
           style={{
             height: '100%',
             overflowY: 'hidden',
-            maxHeight: 'calc(100vh - 74px) ',
+            maxHeight: 'calc(100vh - 10px) ',
           }}
         >
           <div
@@ -139,27 +139,33 @@ const Search = () => (
               <div
                 style={{
                   display: 'flex',
-                  justifyContent: 'flex-end',
-                  paddingRight: 14,
-                  paddingLeft: 14,
+                  justifyContent: 'space-between',
+                  marginRight: 14,
+                  marginLeft: 14,
+                  borderBottom: 'solid 1px rgb(222, 226, 230)',
                 }}
               >
-                <input
-                  style={{ marginTop: 10 }}
-                  checked={showExample}
-                  data-id={'t'}
-                  onChange={toggleShowExample}
-                  type={'checkbox'}
-                />
+                <h5 style={{ color: 'gray', marginTop: 5, marginBottom: 0 }}>
+                  {suggestions.slice(0, 15).length + ' results'}
+                </h5>
+                <div>
+                  <input
+                    style={{ marginTop: 10 }}
+                    checked={showExample}
+                    data-id={'t'}
+                    onChange={toggleShowExample}
+                    type={'checkbox'}
+                  />
 
-                <label data-for={'t'} style={{ margin: 5 }}>
-                  show example
-                </label>
+                  <label data-for={'t'} style={{ margin: 5 }}>
+                    show example
+                  </label>
+                </div>
               </div>
 
               <div
                 style={{
-                  height: '100%',
+                  height: '90%',
                   overflowY: 'auto',
                   padding: 14,
                 }}
