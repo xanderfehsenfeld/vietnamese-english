@@ -11,3 +11,4 @@ vietnamese-english-7671cb1a0c63.json
 definitions.json
 google-cloud-platform-service-account-key.json
 /jest/.jest
+src/server/translate/key.json

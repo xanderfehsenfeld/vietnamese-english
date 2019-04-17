@@ -12,8 +12,7 @@ const {
 } = require('fuse-box')
 const { context, task, src } = require('fuse-box/sparky')
 const fs = require('fs')
-const { definitions, words } = require('@vntk/dictionary')
-const { pick } = require('lodash')
+const { definitions } = require('@vntk/dictionary')
 
 const distFolderName = (isProduction) => {
   if (isProduction) {
@@ -35,6 +34,7 @@ context(
             GOOGLE_CLOUD_PROJECT: 'vietnamese-english',
             NODE_ENV: this.isProduction ? 'production' : 'development',
           }),
+          JSONPlugin(),
           ['node_modules/**.json', JSONPlugin()],
         ],
       })
@@ -190,6 +190,8 @@ task('copy:definitions', async (context) => {
 })
 
 task('write:definitions', async () => {
+  const words = Object.keys(definitions)
+
   const wordsWithoutSpaces = words.filter((v) => v.split(' ').length === 1)
 
   const compoundWords = words.filter((v) => v.split(' ').length !== 1)

@@ -1,39 +1,45 @@
-import { Translate } from '@google-cloud/translate'
 import { Router } from 'express'
+import axios from 'axios'
 
-const translate = new Translate()
+import * as key from './key.json'
 
-/**
- * TODO(developer): Uncomment the following lines before running the sample.
- */
-const text = 'bên bị'
-const target = 'vi'
-const model = 'The model to use, e.g. nmt'
+const translate = async (textToTranslate: string) => {
+  let url = 'https://www.googleapis.com/language/translate/v2/'
+  url += '?key=' + key.apiKey
 
-const options = {
-  // The target language, e.g. "ru"
-  to: target,
-  // Make sure your project is whitelisted.
-  // Possible values are "base" and "nmt"
-  model: model,
+  url += '&q=' + encodeURI(textToTranslate)
+
+  url += '&target=' + 'en'
+  url += '&source=' + 'vi'
+
+  return await axios.get(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  })
 }
-
-// Translates the text into the target language. "text" can be a string for
-// translating a single piece of text, or an array of strings for translating
-// multiple texts.
 
 const router = Router()
 
 router.get('/translation', async (req, res) => {
-  let [translations] = await translate.translate(text, options)
-  const translationsArray = Array.isArray(translations)
-    ? translations
-    : [translations]
+  console.log(key)
+  const textToTranslate = req.query.q
+  if (textToTranslate) {
+    const response = await translate('An Bình B')
 
-  console.log('Translations:')
-  translationsArray.forEach((translation, i) => {
-    console.log(`${text[i]} => (${target}) ${translation}`)
-  })
+    console.log(response.data.data.translations)
+
+    res
+      .status(200)
+      .send(response.data.data.translations)
+      .end()
+  } else {
+    res
+      .status(400)
+      .send('BAD REQUEST')
+      .end()
+  }
 })
 
 export default router
