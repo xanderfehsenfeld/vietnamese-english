@@ -8,27 +8,27 @@ import VocabularyBadge from '../VocabularyBadge'
 
 interface IState {
   savedWords: string[]
-  isFetchingState: boolean
+  isFetchingVocabulary: boolean
   didInitialFetch: boolean
   selectedWord?: string
 }
 export class VocabularyContainer extends Container<IState> {
   state: IState = {
     savedWords: [],
-    isFetchingState: false,
+    isFetchingVocabulary: false,
     didInitialFetch: false,
   }
   selectWord = (word: string) => {
     this.setState({ selectedWord: word })
   }
-  persistState = async (state: any) => await axios.post('state', state)
-  fetchState = async () => {
-    this.setState({ isFetchingState: true })
+  persistVocabulary = async (state: any) => await axios.post('state', state)
+  fetchVocabulary = async () => {
+    this.setState({ isFetchingVocabulary: true })
     try {
       const state = (await axios.get('state')).data
       this.setState({
         savedWords: state,
-        isFetchingState: false,
+        isFetchingVocabulary: false,
         didInitialFetch: true,
       })
     } catch (e) {
@@ -36,7 +36,7 @@ export class VocabularyContainer extends Container<IState> {
     }
 
     this.setState({
-      isFetchingState: false,
+      isFetchingVocabulary: false,
       didInitialFetch: true,
     })
   }
@@ -44,13 +44,13 @@ export class VocabularyContainer extends Container<IState> {
   addWordToSavedWords = async (word: string) => {
     const newSavedWords = this.state.savedWords.concat([word])
     this.setState({ savedWords: newSavedWords })
-    await this.persistState(newSavedWords)
+    await this.persistVocabulary(newSavedWords)
   }
 
-  removeWord = async (word: string) => {
+  removeWordFromVocabulary = async (word: string) => {
     const newSavedWords = this.state.savedWords.filter((w) => w !== word)
     this.setState({ savedWords: newSavedWords })
-    await this.persistState(newSavedWords)
+    await this.persistVocabulary(newSavedWords)
   }
 }
 
@@ -58,18 +58,18 @@ const Vocabulary = ({ compact = false }) => (
   <Subscribe to={[VocabularyContainer, AppContainer]}>
     {(
       { state, selectWord }: VocabularyContainer,
-      { state: stateWithDictionary }: AppContainer,
+      { state: stateWithDictionary, fetchTranslations }: AppContainer,
     ) => {
       const {
         savedWords,
-        isFetchingState,
+        isFetchingVocabulary,
         didInitialFetch,
         selectedWord,
       } = state
 
-      if (!isFetchingState && !didInitialFetch) {
+      if (!isFetchingVocabulary && !didInitialFetch) {
         return null
-      } else if (isFetchingState) {
+      } else if (isFetchingVocabulary) {
         return (
           <div style={{ height: '100%' }}>
             <h3>Vocabulary</h3>
@@ -77,11 +77,22 @@ const Vocabulary = ({ compact = false }) => (
             <span>Fetching...</span>
           </div>
         )
-      } else {
-        const { dictionary } = stateWithDictionary
+      } else if (savedWords) {
+        const {
+          dictionary,
+          translationVietnameseEnglish,
+          isFetchingTranslations,
+        } = stateWithDictionary
 
-        const savedWordsInOrder =
-          savedWords && savedWords.slice(0, 15).reverse()
+        const savedWordsInOrder = savedWords.slice(0, 15).reverse()
+
+        const savedWordsWithoutTranslations = savedWords.filter(
+          (w) => !translationVietnameseEnglish[w],
+        )
+
+        if (savedWordsWithoutTranslations.length && !isFetchingTranslations) {
+          fetchTranslations(savedWordsWithoutTranslations)
+        }
         return (
           <div className={'container fill'}>
             <div style={{ height: '100%' }}>
@@ -106,6 +117,7 @@ const Vocabulary = ({ compact = false }) => (
                         onClick={() => selectWord(v.text)}
                       >
                         <DefinitionPage
+                          translation={translationVietnameseEnglish[v.text]}
                           definitions={v.definitions}
                           text={v.text}
                           isSelected={selectedWord === v.text}

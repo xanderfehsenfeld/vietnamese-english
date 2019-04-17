@@ -11,16 +11,16 @@ const Main = () => (
     <Subscribe to={[AppContainer, VocabularyContainer]}>
       {(
         { state, fetchDictionary }: AppContainer,
-        { state: vocabularyState, fetchState }: VocabularyContainer,
+        { state: vocabularyState, fetchVocabulary }: VocabularyContainer,
       ) => {
         if (!state.isFetching && !state.dictionary) {
           fetchDictionary()
         }
         if (
-          !vocabularyState.isFetchingState &&
+          !vocabularyState.isFetchingVocabulary &&
           !vocabularyState.didInitialFetch
         ) {
-          fetchState()
+          fetchVocabulary()
         }
         return null
       }}

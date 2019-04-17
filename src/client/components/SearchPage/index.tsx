@@ -2,24 +2,27 @@ import * as React from 'react'
 import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
-import { Dictionary, Definition } from 'model'
+import { Dictionary, Definition, Translation } from 'model'
 import { pickBy, map, orderBy, uniqBy } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 import { VocabularyContainer } from '../Vocabulary'
 
+interface ISuggestion {
+  text: string
+  translation?: string
+  definitions: Definition[]
+  start: number
+}
 interface IState {
   query: string
-  subwordSuggestions?: {
-    text: string
-
-    definitions: Definition[]
-    start: number
-  }[]
+  suggestions?: ISuggestion[]
   wordsWithoutSpacesMappedToCompoundWords?: { [key: string]: string[] }
   showExample: boolean
   isFetching: boolean
   dictionary?: Dictionary
   selectedWord?: string
+  translationVietnameseEnglish: { [key: string]: string }
+  isFetchingTranslations: boolean
 }
 
 const removeAccents = (str: string) =>
@@ -30,15 +33,20 @@ export class AppContainer extends Container<IState> {
     query: '',
     isFetching: false,
     showExample: true,
+    translationVietnameseEnglish: {},
+    isFetchingTranslations: false,
   }
 
   toggleShowExample = () => {
     this.setState({ showExample: !this.state.showExample })
   }
-
   onChange = (changedQuery: string) => {
     const formattedQuery = changedQuery.toLowerCase()
-    const { dictionary } = this.state
+    const {
+      dictionary,
+      translationVietnameseEnglish,
+      isFetchingTranslations,
+    } = this.state
     if (dictionary && formattedQuery) {
       const dictionaryFilteredByQuery = pickBy(
         dictionary,
@@ -47,35 +55,69 @@ export class AppContainer extends Container<IState> {
           removeAccents(key.toLowerCase()).includes(formattedQuery),
       )
 
-      const suggestions = map(dictionaryFilteredByQuery, (value, key) => ({
-        text: key,
-        definitions: value,
-        start: Math.max(
-          key
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .indexOf(formattedQuery),
-          key
-            .toLowerCase()
+      const suggestions = map(
+        dictionaryFilteredByQuery,
+        (value, key): ISuggestion => ({
+          text: key,
+          definitions: value,
+          start: Math.max(
+            key
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, '')
+              .indexOf(formattedQuery),
+            key.toLowerCase().indexOf(formattedQuery),
+          ),
+        }),
+      ).slice(0, 20)
 
-            .indexOf(formattedQuery),
-        ),
-      }))
+      const wordsWithoutTranslation = suggestions
+        .filter(({ text }) => !translationVietnameseEnglish[text])
+        .map(({ text }) => text)
+      if (!isFetchingTranslations && wordsWithoutTranslation.length) {
+        this.fetchTranslations(wordsWithoutTranslation)
+      }
+
       const orderedSuggestions = uniqBy(
         orderBy(suggestions, ({ text }) => text.length),
         ({ text }) => text.toLowerCase(),
       )
 
       this.setState({
-        subwordSuggestions: orderedSuggestions,
+        suggestions: orderedSuggestions,
       })
     } else if (changedQuery === '') {
-      this.setState({ subwordSuggestions: [] })
+      this.setState({ suggestions: [] })
     }
 
     this.setState({ query: changedQuery, selectedWord: undefined })
   }
+  fetchTranslations = async (wordsToTranslate: string[]) => {
+    if (!wordsToTranslate.length) {
+      throw new Error('Expected  array of strings with length greater than 0!')
+    }
+    this.setState({ isFetchingTranslations: true })
+
+    const query = wordsToTranslate.map((v) => `q=${v}`).join('&')
+    try {
+      const response: Translation[] = (await axios.get(`translation?${query}`))
+        .data
+
+      const { translationVietnameseEnglish } = this.state
+      const withAddedTranslations = { ...translationVietnameseEnglish }
+
+      response.forEach((translation) => {
+        withAddedTranslations[translation.vietnamese] = translation.english
+      })
+
+      this.setState({ translationVietnameseEnglish: withAddedTranslations })
+    } catch (e) {
+      console.log(e)
+    }
+
+    this.setState({ isFetchingTranslations: false })
+  }
+
   fetchDictionary = async () => {
     this.setState({ isFetching: true })
 
@@ -100,10 +142,14 @@ const Search = () => (
       { state, onChange, toggleShowExample }: AppContainer,
       { state: vocabularyState, selectWord }: VocabularyContainer,
     ) => {
-      const { showExample, query, isFetching, subwordSuggestions } = state
+      const {
+        showExample,
+        query,
+        isFetching,
+        suggestions,
+        translationVietnameseEnglish,
+      } = state
       const { selectedWord, savedWords } = vocabularyState
-
-      let suggestions = subwordSuggestions
 
       return (
         <div
@@ -191,6 +237,9 @@ const Search = () => (
                       <DefinitionPage
                         definitions={suggestion.definitions}
                         text={suggestion.text}
+                        translation={
+                          translationVietnameseEnglish[suggestion.text] || '...'
+                        }
                         showExample={showExample}
                         isSelected={suggestion.text === selectedWord}
                       >

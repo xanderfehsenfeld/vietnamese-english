@@ -3,6 +3,7 @@ import { Definition } from '../../../../../model'
 import { VocabularyContainer } from '../../../Vocabulary'
 import { Subscribe } from 'unstated'
 import './index.scss'
+import { AppContainer } from '../../../SearchPage'
 
 export interface IGraphNode {
   id: string
@@ -29,11 +30,12 @@ const GraphNode = ({
 
   const definition = definitions ? definitions[0].definition : ''
   return (
-    <Subscribe to={[VocabularyContainer]}>
-      {({ state }: VocabularyContainer) => {
+    <Subscribe to={[VocabularyContainer, AppContainer]}>
+      {({ state }: VocabularyContainer, { state: appState }: AppContainer) => {
         const { selectedWord } = state
+        const { translationVietnameseEnglish } = appState
         const isSelected = selectedWord === id
-
+        const translation = translationVietnameseEnglish[id]
         return (
           <React.Fragment>
             <div
@@ -62,6 +64,9 @@ const GraphNode = ({
                 }}
               />
             ) : null}
+            <span className={'node-translation'} style={{ fontSize: 15 }}>
+              {translation ? `"${translation}"` : ''}
+            </span>
           </React.Fragment>
         )
       }}

@@ -6,3 +6,8 @@ export interface Definition {
 export interface Dictionary {
   [key: string]: Definition[]
 }
+
+export interface Translation {
+  vietnamese: string
+  english: string
+}

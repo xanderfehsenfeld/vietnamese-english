@@ -37,3 +37,27 @@
     top: -4px;
   }
 }
+
+.node-translation {
+  position: absolute;
+  right: 74px;
+  top: 38px;
+  text-align: right;
+  color: lightgray;
+  width: 100%;
+  pointer-events: none;
+}
+
+g.node {
+  overflow: visible;
+  svg {
+    overflow: visible;
+    foreignObject {
+      overflow: visible;
+    }
+  }
+
+  &:hover .node-translation {
+    color: gray;
+  }
+}

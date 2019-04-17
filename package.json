@@ -16,9 +16,11 @@
     "test:dev": "jest --config ./jest/jest.config.js --watch"
   },
   "dependencies": {
+    "@google-cloud/automl": "^0.1.2",
     "@google-cloud/connect-datastore": "^2.0.2",
     "@google-cloud/datastore": "^3.1.2",
-    "@google-cloud/translate": "^3.0.1",
+    "@google-cloud/translate": "^3.0.0",
+    "@types/gapi.client.translate": "^2.0.1",
     "@vntk/dictionary": "^1.0.0",
     "axios": "^0.18.0",
     "body-parser": "^1.18.3",

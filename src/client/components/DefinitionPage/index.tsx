@@ -12,6 +12,7 @@ const DefinitionPage = ({
   showExample = true,
   isSelected,
   showRemoveButton = true,
+  translation,
 }: {
   definitions: Definition[]
   text: string
@@ -20,9 +21,14 @@ const DefinitionPage = ({
   showExample?: boolean
   isSelected?: boolean
   showRemoveButton?: boolean
+  translation: string
 }) => (
   <Subscribe to={[VocabularyContainer]}>
-    {({ addWordToSavedWords, state, removeWord }: VocabularyContainer) => {
+    {({
+      addWordToSavedWords,
+      state,
+      removeWordFromVocabulary,
+    }: VocabularyContainer) => {
       const { savedWords } = state
 
       const wordIsSaved = savedWords.includes(text)
@@ -37,6 +43,9 @@ const DefinitionPage = ({
             >
               <h5 style={{ marginTop: 5, marginBottom: 5, marginRight: 10 }}>
                 {children || text}
+                <span style={{ color: 'lightgray' }}>
+                  {` : "${translation}"`}
+                </span>
               </h5>
             </div>
             {showDefinition &&
@@ -75,7 +84,7 @@ const DefinitionPage = ({
                 className={`btn btn-danger`}
                 onClick={(e) => {
                   e.stopPropagation()
-                  removeWord(text)
+                  removeWordFromVocabulary(text)
                 }}
               >
                 {'Remove'}
