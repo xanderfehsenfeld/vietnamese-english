@@ -16,6 +16,7 @@
     height: 50px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     padding: 13px;
+    margin-top: 26px;
   }
 }
 
@@ -40,12 +41,12 @@
 
 .node-translation {
   position: absolute;
-  right: 74px;
-  top: 38px;
-  text-align: right;
+  left: 76px;
+  top: 57px;
   color: lightgray;
-  width: 100%;
+  width: 200px;
   pointer-events: none;
+  font-size: 15px;
 }
 
 g.node {

@@ -3,6 +3,9 @@ import { Definition } from '../../../model'
 
 import { VocabularyContainer } from '../Vocabulary'
 import { Subscribe } from 'unstated'
+import Row from 'react-bootstrap/Row'
+import Col from 'react-bootstrap/Col'
+import Button from 'react-bootstrap/Button'
 
 const DefinitionPage = ({
   definitions,
@@ -33,8 +36,8 @@ const DefinitionPage = ({
 
       const wordIsSaved = savedWords.includes(text)
       return (
-        <div className={'row'} style={{ padding: '15px 0' }}>
-          <div className={'col-8'}>
+        <Row style={{ padding: '15px 0' }}>
+          <Col xs={8}>
             <div
               style={{
                 display: 'flex',
@@ -68,9 +71,9 @@ const DefinitionPage = ({
                   </div>
                 </div>
               ))}
-          </div>
-          <div
-            className={'col-4'}
+          </Col>
+          <Col
+            xs={4}
             style={{
               textAlign: 'right',
               display: 'flex',
@@ -80,48 +83,41 @@ const DefinitionPage = ({
             }}
           >
             {wordIsSaved && showRemoveButton && (
-              <button
-                className={`btn btn-danger`}
+              <Button
+                variant={'danger'}
                 onClick={(e) => {
                   e.stopPropagation()
                   removeWordFromVocabulary(text)
                 }}
               >
                 {'Remove'}
-              </button>
+              </Button>
             )}
 
             {wordIsSaved && !showRemoveButton && (
-              <button
-                className={`btn 
-                            btn-secondary
-                          `}
-                disabled={true}
-              >
+              <Button variant={'secondary'} disabled={true}>
                 {'Added'}
-              </button>
+              </Button>
             )}
 
             {!wordIsSaved && (
-              <button
-                className={`btn 
-                  btn-secondary
-                `}
+              <Button
+                variant={'secondary'}
                 onClick={(e) => {
                   e.stopPropagation()
                   addWordToSavedWords(text)
                 }}
               >
                 {'Add To Vocab'}
-              </button>
+              </Button>
             )}
             {isSelected && (
-              <button disabled className={'btn btn-primary'}>
+              <Button disabled variant={'primary'}>
                 Selected
-              </button>
+              </Button>
             )}
-          </div>
-        </div>
+          </Col>
+        </Row>
       )
     }}
   </Subscribe>

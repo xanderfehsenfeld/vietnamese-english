@@ -4,6 +4,8 @@ import { VocabularyContainer } from '../../../Vocabulary'
 import { Subscribe } from 'unstated'
 import './index.scss'
 import { AppContainer } from '../../../SearchPage'
+import Tooltip from 'react-bootstrap/Tooltip'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 
 export interface IGraphNode {
   id: string
@@ -38,23 +40,29 @@ const GraphNode = ({
         const translation = translationVietnameseEnglish[id]
         return (
           <React.Fragment>
-            <div
-              title={`${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`}
-              className={`definition-graph-node ${
-                isSelected ? 'isSelected' : ''
-              }`}
-              style={{ backgroundColor: color }}
+            <OverlayTrigger
+              placement={'bottom'}
+              overlay={
+                <Tooltip id={`tooltip-${'bottom'}`}>
+                  <span>{definition}</span>
+                </Tooltip>
+              }
             >
-              {hiddenAdjacentNodesCount}
-            </div>
-            {isSelected ? null : (
-              <span
-                style={{ fontSize: 8, position: 'absolute' }}
-                title={definition}
+              <div
+                title={
+                  hiddenAdjacentNodesCount
+                    ? `${hiddenAdjacentNodesCount} other words related to '${id}.' Click to expand them.`
+                    : undefined
+                }
+                className={`definition-graph-node ${
+                  isSelected ? 'isSelected' : ''
+                }`}
+                style={{ backgroundColor: color }}
               >
-                {definition}
-              </span>
-            )}
+                {hiddenAdjacentNodesCount}
+              </div>
+            </OverlayTrigger>
+
             {isSelected ? (
               <button
                 className={'btn btn-danger remove-node-button'}

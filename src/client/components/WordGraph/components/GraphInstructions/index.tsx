@@ -1,4 +1,5 @@
 import * as React from 'react'
+import Badge from 'react-bootstrap/Badge'
 
 const GraphInstructions = () => (
   <h5 style={{ display: 'inline' }}>
@@ -7,26 +8,20 @@ const GraphInstructions = () => (
       'hold right mouse + move to pan',
       'click a node to expand related words',
     ].map((instruction, i) => (
-      <span
-        style={{ marginLeft: 14, marginBottom: 8 }}
+      <Badge
         key={i}
-        className="badge badge-secondary"
+        style={{ marginLeft: 14, marginBottom: 8 }}
+        variant="secondary"
       >
         {instruction}
-      </span>
+      </Badge>
     ))}
-    <span
-      style={{ marginLeft: 14, marginBottom: 8 }}
-      className="badge badge-success"
-    >
+    <Badge variant={'success'} style={{ marginLeft: 14, marginBottom: 8 }}>
       {'added'}
-    </span>
-    <span
-      style={{ marginLeft: 14, marginBottom: 8 }}
-      className="badge badge-warning"
-    >
+    </Badge>
+    <Badge variant={'warning'} style={{ marginLeft: 14, marginBottom: 8 }}>
       {'not added'}
-    </span>
+    </Badge>
   </h5>
 )
 

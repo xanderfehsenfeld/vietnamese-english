@@ -6,6 +6,8 @@ import axios from 'axios'
 import { Link, Switch, Route } from 'react-router-dom'
 import VocabularyBadge from '../VocabularyBadge'
 
+import BootstrapContainer from 'react-bootstrap/Container'
+
 interface IState {
   savedWords: string[]
   isFetchingVocabulary: boolean
@@ -54,7 +56,7 @@ export class VocabularyContainer extends Container<IState> {
   }
 }
 
-const Vocabulary = ({ compact = false }) => (
+const Vocabulary = () => (
   <Subscribe to={[VocabularyContainer, AppContainer]}>
     {(
       { state, selectWord }: VocabularyContainer,
@@ -94,14 +96,13 @@ const Vocabulary = ({ compact = false }) => (
           fetchTranslations(savedWordsWithoutTranslations)
         }
         return (
-          <div className={'container fill'}>
+          <BootstrapContainer>
             <div style={{ height: '100%' }}>
               <h3>
                 Vocabulary <VocabularyBadge />
               </h3>
               <div>
-                {!compact &&
-                  dictionary &&
+                {dictionary &&
                   savedWordsInOrder
 
                     .map((v) => ({ text: v, definitions: dictionary[v] }))
@@ -139,7 +140,7 @@ const Vocabulary = ({ compact = false }) => (
                 )}
               </div>
             </div>
-          </div>
+          </BootstrapContainer>
         )
       }
     }}

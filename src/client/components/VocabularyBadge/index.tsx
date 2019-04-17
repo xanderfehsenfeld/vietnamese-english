@@ -1,13 +1,14 @@
 import * as React from 'react'
 import connect from 'unstated-connect2'
 import { VocabularyContainer } from '../Vocabulary'
+import Badge from 'react-bootstrap/Badge'
 
 interface IProps {
   count: number
 }
 
 const VocabularyBadge = ({ count }: IProps) => (
-  <span className="badge badge-secondary">{count}</span>
+  <Badge variant="secondary">{count}</Badge>
 )
 
 export default connect({

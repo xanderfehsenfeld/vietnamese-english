@@ -13,6 +13,9 @@ import GraphInstructions from './components/GraphInstructions'
 import withSizes from 'react-sizes'
 import { IReactD3Config } from './model'
 import GraphNode, { IGraphNode } from './components/GraphNode'
+import Col from 'react-bootstrap/Col'
+import Row from 'react-bootstrap/Row'
+import Container from 'react-bootstrap/Container'
 
 const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
@@ -124,7 +127,7 @@ class WordGraph extends React.Component<IProps, IState> {
     const { dataToRender } = this.state
     if (dataToRender) {
       const nextData = removeNodeFromGraphData(id, dataToRender)
-      this.setState({ dataToRender: nextData })
+      this.setDataToRender(nextData)
     }
   }
   addInitialNodesForWord = (word: string): void => {
@@ -149,10 +152,11 @@ class WordGraph extends React.Component<IProps, IState> {
       lastClicked,
     )
 
-    dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
-    this.setState({
-      dataToRender: this.populateGraphDataWithDefinitions(dataToRender),
-    })
+    const dataWithDefinitions = this.populateGraphDataWithDefinitions(
+      dataToRender,
+    )
+
+    this.setDataToRender(dataWithDefinitions)
   }
 
   populateGraphDataWithDefinitions = (graphData: IGraphData): IGraphData => {
@@ -176,6 +180,10 @@ class WordGraph extends React.Component<IProps, IState> {
     }))
   }
 
+  setDataToRender = (dataToRender: IGraphData) => {
+    this.setState({ dataToRender: { ...dataToRender } })
+  }
+
   onClickNode = (idOfNodeClicked: string) => {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
     const { dataToRender: previousData, lastClicked } = this.state
@@ -191,11 +199,8 @@ class WordGraph extends React.Component<IProps, IState> {
       nextDataToRender,
     )
 
-    dataWithDefinitions.nodes = this.addColorToNodes(dataWithDefinitions.nodes)
     if (previousData) {
-      this.setState({
-        dataToRender: dataWithDefinitions,
-      })
+      this.setDataToRender(dataWithDefinitions)
     }
   }
 
@@ -242,26 +247,23 @@ class WordGraph extends React.Component<IProps, IState> {
             />
           ) : null}
         </div>
-        <div
-          className={'container-fluid'}
-          style={{ height: '100%', overflow: 'hidden' }}
-        >
-          <div className={'row no-gutters'}>
-            <div className={'col-md-5 '} style={{ overflowY: 'auto' }}>
+        <Container fluid style={{ height: '100%', overflow: 'hidden' }}>
+          <Row noGutters>
+            <Col md={5} style={{ overflowY: 'auto' }}>
               <Search />
-            </div>
+            </Col>
 
-            <div
-              className={`col-md-7 `}
+            <Col
+              md={7}
               style={{
                 paddingTop: 1,
                 pointerEvents: 'none',
               }}
             >
               <GraphInstructions />
-            </div>
-          </div>
-        </div>
+            </Col>
+          </Row>
+        </Container>
       </div>
     )
   }
