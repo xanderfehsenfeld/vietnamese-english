@@ -87,12 +87,10 @@ const Vocabulary = ({
           dictionary,
           translationVietnameseEnglish,
           isFetchingTranslations,
+          checkedWords,
         } = stateWithDictionary
 
-        const savedWordsInOrder = orderBy(
-          savedWords.slice(0, 15).reverse(),
-          (w) => !(w === selectedWord),
-        )
+        const savedWordsInOrder = savedWords.slice(0, 15).reverse()
 
         const savedWordsWithoutTranslations = savedWords.filter(
           (w) => !translationVietnameseEnglish[w],
@@ -111,27 +109,31 @@ const Vocabulary = ({
                 savedWordsInOrder
 
                   .map((v) => ({ text: v, definitions: dictionary[v] }))
-                  .map((v) => (
-                    <div
-                      key={v.text}
-                      className={'suggestion'}
-                      style={{
-                        cursor: 'pointer',
-                        paddingBottom: 4,
-                        paddingTop: 3,
-                      }}
-                      onClick={() => selectWord(v.text)}
-                    >
-                      <DefinitionPage
-                        translation={translationVietnameseEnglish[v.text]}
-                        definitions={v.definitions}
-                        text={v.text}
-                        isSelected={selectedWord === v.text}
+                  .map(({ text, definitions }) => {
+                    const isChecked = checkedWords.includes(text)
+                    return (
+                      <div
+                        key={text}
+                        className={'suggestion'}
+                        style={{
+                          cursor: 'pointer',
+                          paddingBottom: 4,
+                          paddingTop: 3,
+                        }}
+                        onClick={() => selectWord(text)}
                       >
-                        {v.text}
-                      </DefinitionPage>
-                    </div>
-                  ))}
+                        <DefinitionPage
+                          isChecked={isChecked}
+                          translation={translationVietnameseEnglish[text]}
+                          definitions={definitions}
+                          text={text}
+                          isSelected={selectedWord === text}
+                        >
+                          {text}
+                        </DefinitionPage>
+                      </div>
+                    )
+                  })}
               {dictionary && savedWords.length === 0 && (
                 <h6>
                   Nothing here. Add words using the{' '}

@@ -40,7 +40,9 @@ const GraphNode = ({
               className={`definition-graph-node ${
                 isSelected ? 'isSelected' : ''
               }`}
-              style={{ backgroundColor: color }}
+              style={{
+                backgroundColor: isSelected ? 'rgb(123, 169, 248)' : color,
+              }}
             >
               {hiddenAdjacentNodesCount}
             </div>

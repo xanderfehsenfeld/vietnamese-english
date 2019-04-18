@@ -23,6 +23,7 @@ interface IState {
   selectedWord?: string
   translationVietnameseEnglish: { [key: string]: string }
   isFetchingTranslations: boolean
+  checkedWords: string[]
 }
 
 const removeAccents = (str: string) =>
@@ -35,6 +36,16 @@ export class AppContainer extends Container<IState> {
     showExample: true,
     translationVietnameseEnglish: {},
     isFetchingTranslations: false,
+    checkedWords: [],
+  }
+
+  toggleWordFromCheckedWords = (word: string) => {
+    const { checkedWords } = this.state
+    if (checkedWords.includes(word)) {
+      this.setState({ checkedWords: checkedWords.filter((v) => v !== word) })
+    } else {
+      this.setState({ checkedWords: checkedWords.concat([word]) })
+    }
   }
 
   toggleShowExample = () => {

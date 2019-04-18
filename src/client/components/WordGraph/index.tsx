@@ -18,6 +18,7 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
+import VocabularyBadge from '../VocabularyBadge'
 
 const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
@@ -234,14 +235,7 @@ class WordGraph extends React.Component<IProps, IState> {
       lastClickedPrettify,
       prettifyIsDisabled,
     } = this.state
-    const {
-      height,
-      width,
-      onChange,
-      selectWord,
-      selectedWord,
-      savedWords,
-    } = this.props
+    const { height, width, onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
     if (dataToRender) {
       dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
@@ -266,11 +260,6 @@ class WordGraph extends React.Component<IProps, IState> {
             <Graph
               key={lastClickedPrettify}
               onClickNode={async (id: string) => {
-                // if (savedWords.includes(id)) {
-                //   this.switchMode('Vocabulary')
-                // } else {
-                //   this.switchMode('Search')
-                // }
                 if (selectedWord === id) {
                   onClickNode(id)
                 } else {
@@ -309,18 +298,20 @@ class WordGraph extends React.Component<IProps, IState> {
                     marginRight: 15,
                   }}
                 >
-                  {['Search', 'Vocabulary'].map(
-                    (modeForThisButton, i: number) => (
-                      <Button
-                        active={mode === modeForThisButton}
-                        variant={'outline-secondary'}
-                        key={i}
-                        onClick={() => this.switchMode(modeForThisButton)}
-                      >
-                        {modeForThisButton}
-                      </Button>
-                    ),
-                  )}
+                  <Button
+                    active={mode === 'Vocabulary'}
+                    variant={'outline-secondary'}
+                    onClick={() => this.switchMode('Vocabulary')}
+                  >
+                    {'Vocabulary'} <VocabularyBadge />
+                  </Button>
+                  <Button
+                    active={mode === 'Search'}
+                    variant={'outline-secondary'}
+                    onClick={() => this.switchMode('Search')}
+                  >
+                    {'Search'}
+                  </Button>
                 </ButtonGroup>
 
                 <Button
@@ -379,7 +370,11 @@ const GraphWithContainers = () => (
       { state, onChange }: AppContainer,
       { state: vocabularyState, selectWord }: VocabularyContainer,
     ) => {
-      const { dictionary, wordsWithoutSpacesMappedToCompoundWords } = state
+      const {
+        dictionary,
+        wordsWithoutSpacesMappedToCompoundWords,
+        checkedWords,
+      } = state
 
       const { savedWords, selectedWord } = vocabularyState
 
@@ -387,7 +382,7 @@ const GraphWithContainers = () => (
         const props: IPropsFromUnstated = {
           wordsWithoutSpacesMappedToCompoundWords,
           dictionary,
-          savedWords,
+          savedWords: checkedWords.filter((v) => savedWords.includes(v)),
           selectWord,
           selectedWord,
           onChange,

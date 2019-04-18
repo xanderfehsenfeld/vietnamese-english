@@ -6,6 +6,8 @@ import { Subscribe } from 'unstated'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
+import Form from 'react-bootstrap/Form'
+import { AppContainer } from '../SearchPage'
 
 const DefinitionPage = ({
   definitions,
@@ -16,6 +18,7 @@ const DefinitionPage = ({
   isSelected,
   showRemoveButton = true,
   translation,
+  isChecked,
 }: {
   definitions: Definition[]
   text: string
@@ -25,19 +28,23 @@ const DefinitionPage = ({
   isSelected?: boolean
   showRemoveButton?: boolean
   translation: string
+  isChecked?: boolean
 }) => (
-  <Subscribe to={[VocabularyContainer]}>
-    {({
-      addWordToSavedWords,
-      state,
-      removeWordFromVocabulary,
-    }: VocabularyContainer) => {
+  <Subscribe to={[VocabularyContainer, AppContainer]}>
+    {(
+      {
+        addWordToSavedWords,
+        state,
+        removeWordFromVocabulary,
+      }: VocabularyContainer,
+      { toggleWordFromCheckedWords }: AppContainer,
+    ) => {
       const { savedWords } = state
 
       const wordIsSaved = savedWords.includes(text)
       return (
         <Row style={{ padding: '15px 0' }}>
-          <Col xs={8}>
+          <Col xs={10}>
             <div
               style={{
                 display: 'flex',
@@ -73,49 +80,66 @@ const DefinitionPage = ({
               ))}
           </Col>
           <Col
-            xs={4}
+            xs={2}
             style={{
               textAlign: 'right',
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'space-between',
+              justifyContent: 'flex-start',
               alignItems: 'flex-end',
             }}
           >
-            {wordIsSaved && showRemoveButton && (
-              <Button
-                variant={'danger'}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  removeWordFromVocabulary(text)
-                }}
-              >
-                {'Remove'}
-              </Button>
-            )}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                marginBottom: 10,
+              }}
+            >
+              {wordIsSaved ? null : (
+                <Button
+                  size={'sm'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    addWordToSavedWords(text)
+                  }}
+                  variant={'secondary'}
+                >
+                  {'Save'}
+                </Button>
+              )}
 
-            {wordIsSaved && !showRemoveButton && (
-              <Button variant={'secondary'} disabled={true}>
-                {'Added'}
-              </Button>
-            )}
-
-            {!wordIsSaved && (
-              <Button
-                variant={'secondary'}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  addWordToSavedWords(text)
-                }}
-              >
-                {'Add To Vocab'}
-              </Button>
-            )}
-            {isSelected && (
-              <Button disabled variant={'primary'}>
-                Selected
-              </Button>
-            )}
+              {wordIsSaved && showRemoveButton && (
+                <Button
+                  size={'sm'}
+                  style={{ marginLeft: 10 }}
+                  variant={'danger'}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    removeWordFromVocabulary(text)
+                  }}
+                >
+                  {'Remove'}
+                </Button>
+              )}
+              {isChecked === true || isChecked === false ? (
+                <Form.Check
+                  type="checkbox"
+                  checked={isChecked}
+                  style={{
+                    transform: 'scale(1.5)',
+                    marginRight: 10,
+                    marginLeft: 10,
+                    cursor: 'pointer',
+                    marginTop: 2,
+                  }}
+                  onClick={(e) => {
+                    toggleWordFromCheckedWords(text)
+                    e.stopPropagation()
+                  }}
+                />
+              ) : null}
+            </div>
           </Col>
         </Row>
       )

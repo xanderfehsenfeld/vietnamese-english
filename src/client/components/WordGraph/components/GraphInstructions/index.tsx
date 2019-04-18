@@ -17,10 +17,10 @@ const GraphInstructions = () => (
       </Badge>
     ))}
     <Badge variant={'success'} style={{ marginLeft: 14, marginBottom: 8 }}>
-      {'added'}
+      {'saved to vocabulary'}
     </Badge>
     <Badge variant={'warning'} style={{ marginLeft: 14, marginBottom: 8 }}>
-      {'not added'}
+      {'not saved'}
     </Badge>
   </h5>
 )
