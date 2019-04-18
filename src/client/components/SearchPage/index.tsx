@@ -5,7 +5,7 @@ import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
 import { pickBy, map, orderBy, uniqBy, uniq } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
-import { VocabularyContainer } from '../Vocabulary'
+import { SavedWordsContainer } from '../SavedWords'
 
 interface ISuggestion {
   text: string
@@ -157,10 +157,10 @@ export class AppContainer extends Container<IState> {
 }
 
 const Search = () => (
-  <Subscribe to={[AppContainer, VocabularyContainer]}>
+  <Subscribe to={[AppContainer, SavedWordsContainer]}>
     {(
       { state, onChange, toggleShowExample }: AppContainer,
-      { state: vocabularyState, selectWord }: VocabularyContainer,
+      { state: savedWordsState, selectWord }: SavedWordsContainer,
     ) => {
       const {
         showExample,
@@ -169,16 +169,10 @@ const Search = () => (
         suggestions,
         translationVietnameseEnglish,
       } = state
-      const { selectedWord, savedWords } = vocabularyState
+      const { selectedWord, savedWords } = savedWordsState
 
       return (
-        <div
-          style={{
-            height: '100%',
-            overflowY: 'hidden',
-            maxHeight: 'calc(100vh - 10px) ',
-          }}
-        >
+        <React.Fragment>
           <div
             className="md-form mt-0"
             style={{
@@ -279,7 +273,7 @@ const Search = () => (
               </div>
             </React.Fragment>
           ) : null}
-        </div>
+        </React.Fragment>
       )
     }}
   </Subscribe>

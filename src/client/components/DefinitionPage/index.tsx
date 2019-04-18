@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Definition } from '../../../model'
 
-import { VocabularyContainer } from '../Vocabulary'
+import { SavedWordsContainer } from '../SavedWords'
 import { Subscribe } from 'unstated'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -30,13 +30,13 @@ const DefinitionPage = ({
   translation: string
   isChecked?: boolean
 }) => (
-  <Subscribe to={[VocabularyContainer, AppContainer]}>
+  <Subscribe to={[SavedWordsContainer, AppContainer]}>
     {(
       {
         addWordToSavedWords,
         state,
-        removeWordFromVocabulary,
-      }: VocabularyContainer,
+        removeWordFromSavedWords,
+      }: SavedWordsContainer,
       { toggleWordFromCheckedWords }: AppContainer,
     ) => {
       const { savedWords } = state
@@ -116,7 +116,7 @@ const DefinitionPage = ({
                   variant={'danger'}
                   onClick={(e) => {
                     e.stopPropagation()
-                    removeWordFromVocabulary(text)
+                    removeWordFromSavedWords(text)
                   }}
                 >
                   {'Remove'}

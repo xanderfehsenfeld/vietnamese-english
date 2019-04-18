@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Graph } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import Search, { AppContainer } from '../SearchPage'
-import Vocabulary, { VocabularyContainer } from '../Vocabulary'
+import SavedWords, { SavedWordsContainer } from '../SavedWords'
 import { Dictionary } from '../../../model'
 import {
   getGraphDataWithNextNodeAdded,
@@ -18,7 +18,8 @@ import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import Button from 'react-bootstrap/Button'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
-import VocabularyBadge from '../VocabularyBadge'
+import SavedWordsBadge from '../SavedWordsBadge'
+import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
 
 const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
@@ -89,7 +90,6 @@ export interface IGraphData {
 interface IState {
   dataToRender?: IGraphData
   lastClicked?: { x: number; y: number }
-  mode: 'Search' | 'Vocabulary'
   lastClickedPrettify: number
   prettifyIsDisabled: boolean
 }
@@ -108,14 +108,13 @@ type IProps = IPropsFromUnstated & {
 }
 class WordGraph extends React.Component<IProps, IState> {
   componentDidMount = () => {
-    setTimeout(this.initializeWordsInVocabulary, 1000)
+    setTimeout(this.initializeSavedWords, 1000)
   }
   state: IState = {
-    mode: 'Search',
     lastClickedPrettify: new Date().getTime(),
     prettifyIsDisabled: false,
   }
-  initializeWordsInVocabulary = () => {
+  initializeSavedWords = () => {
     const { savedWords } = this.props
     savedWords.forEach((word, i) =>
       setTimeout(() => this.addInitialNodesForWord(word), 250 * i),
@@ -225,16 +224,8 @@ class WordGraph extends React.Component<IProps, IState> {
       this.setDataToRender(dataWithDefinitions)
     }
   }
-
-  switchMode = (mode: 'Search' | 'Vocabulary') => this.setState({ mode })
-
   render() {
-    const {
-      dataToRender,
-      mode,
-      lastClickedPrettify,
-      prettifyIsDisabled,
-    } = this.state
+    const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
     const { height, width, onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
     if (dataToRender) {
@@ -277,85 +268,18 @@ class WordGraph extends React.Component<IProps, IState> {
             />
           ) : null}
         </div>
-        <Container
-          fluid={false}
-          style={{ height: '100%', overflow: 'hidden', paddingTop: 15 }}
-        >
+        <Container fluid={false} style={{ marginTop: 15 }}>
           <Row noGutters>
-            <Col
-              lg={5}
-              style={{ overflowY: 'auto' }}
-              className={'d-none d-lg-block'}
-            >
-              <div
-                style={{
-                  padding: 14,
-                  paddingTop: 5,
-                  justifyContent: 'space-between',
-                  display: 'flex',
-                }}
+            <Col lg={5} className={'d-none d-lg-block'}>
+              {/* <Button
+                disabled={prettifyIsDisabled}
+                variant={'success'}
+                onClick={this.onClickPrettify}
               >
-                <ButtonGroup
-                  style={{
-                    width: '100%',
-                    backgroundColor: 'white',
-                    marginRight: 15,
-                  }}
-                >
-                  <Button
-                    active={mode === 'Vocabulary'}
-                    variant={'outline-secondary'}
-                    onClick={() => this.switchMode('Vocabulary')}
-                  >
-                    {'Vocabulary'} <VocabularyBadge />
-                  </Button>
-                  <Button
-                    active={mode === 'Search'}
-                    variant={'outline-secondary'}
-                    onClick={() => this.switchMode('Search')}
-                  >
-                    {'Search'}
-                  </Button>
-                </ButtonGroup>
+                Prettify
+              </Button> */}
 
-                <Button
-                  disabled={prettifyIsDisabled}
-                  variant={'success'}
-                  onClick={this.onClickPrettify}
-                >
-                  Prettify
-                </Button>
-              </div>
-              {mode === 'Search' ? (
-                <Search />
-              ) : (
-                <div
-                  style={{
-                    height: '100%',
-                    overflowY: 'hidden',
-                    maxHeight: 'calc(100vh - 10px) ',
-                  }}
-                >
-                  <Vocabulary
-                    style={{
-                      height: '80%',
-                      overflowY: 'auto',
-                      paddingRight: 14,
-                      paddingLeft: 14,
-                    }}
-                  />
-                </div>
-              )}
-            </Col>
-
-            <Col
-              lg={7}
-              style={{
-                paddingTop: 1,
-                pointerEvents: 'none',
-              }}
-            >
-              <GraphInstructions />
+              <SavedWordsSearchTabs />
             </Col>
           </Row>
         </Container>
@@ -369,10 +293,10 @@ const mapSizesToProps = (sizes: any) => sizes
 const WordGraphWithDimensions = withSizes(mapSizesToProps)(WordGraph)
 
 const GraphWithContainers = () => (
-  <Subscribe to={[AppContainer, VocabularyContainer]}>
+  <Subscribe to={[AppContainer, SavedWordsContainer]}>
     {(
       { state, onChange }: AppContainer,
-      { state: vocabularyState, selectWord }: VocabularyContainer,
+      { state: savedWordsState, selectWord }: SavedWordsContainer,
     ) => {
       const {
         dictionary,
@@ -380,7 +304,7 @@ const GraphWithContainers = () => (
         checkedWords,
       } = state
 
-      const { savedWords, selectedWord } = vocabularyState
+      const { savedWords, selectedWord } = savedWordsState
 
       if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
         const props: IPropsFromUnstated = {

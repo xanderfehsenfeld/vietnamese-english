@@ -3,25 +3,25 @@ import { Provider as UnstatedProvider, Subscribe } from 'unstated'
 import { HashRouter as Router, Switch, Route } from 'react-router-dom'
 import Header from '../Header'
 import { AppContainer } from '../SearchPage'
-import Vocabulary, { VocabularyContainer } from '../Vocabulary'
+import SavedWords, { SavedWordsContainer } from '../SavedWords'
 import GraphWithContainers from '../WordGraph'
 import Container from 'react-bootstrap/Container'
 
 const Main = () => (
   <UnstatedProvider>
-    <Subscribe to={[AppContainer, VocabularyContainer]}>
+    <Subscribe to={[AppContainer, SavedWordsContainer]}>
       {(
         { state, fetchDictionary }: AppContainer,
-        { state: vocabularyState, fetchVocabulary }: VocabularyContainer,
+        { state: savedWordsState, fetchSavedWords }: SavedWordsContainer,
       ) => {
         if (!state.isFetching && !state.dictionary) {
           fetchDictionary()
         }
         if (
-          !vocabularyState.isFetchingVocabulary &&
-          !vocabularyState.didInitialFetch
+          !savedWordsState.isFetchingSavedWords &&
+          !savedWordsState.didInitialFetch
         ) {
-          fetchVocabulary()
+          fetchSavedWords()
         }
         return null
       }}
@@ -32,12 +32,12 @@ const Main = () => (
         <Route
           render={() => (
             <Container fluid={false} style={{ paddingTop: 15 }}>
-              <Vocabulary />
+              <SavedWords />
             </Container>
           )}
-          path={'/vocabulary'}
+          path={'/words'}
         />
-        <Route component={GraphWithContainers} path={'/'} exact />
+        <Route component={GraphWithContainers} path={'/'} />
       </Switch>
     </Router>
   </UnstatedProvider>

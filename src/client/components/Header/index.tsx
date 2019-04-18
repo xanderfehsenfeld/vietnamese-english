@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Container, Subscribe } from 'unstated'
 import axios from 'axios'
 import { Link } from 'react-router-dom'
-import VocabularyBadge from '../VocabularyBadge'
+import SavedWordsBadge from '../SavedWordsBadge'
 
 interface IState {
   startedInitialFetch: boolean
@@ -30,14 +30,14 @@ const Header = () => (
           className="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 bg-white border-bottom box-shadow"
         >
           <h5 className="my-0 mr-md-auto font-weight-normal">
-            Vietnamese Vocabulary Organizer
+            Vietnamese Word Explorer
           </h5>
           <nav className="my-2 my-md-0 mr-md-3">
             <span className="p-2 text-dark">
               <Link to={'/'}>Graph</Link>
             </span>
             <span className="p-2 text-dark">
-              <Link to={'/vocabulary'}>Vocabulary</Link> <VocabularyBadge />
+              <Link to={'/words'}>Saved Words</Link> <SavedWordsBadge />
             </span>
             <span className="p-2 text-dark ">
               {state.displayName && `${state.displayName.split(' ')[0]}`}

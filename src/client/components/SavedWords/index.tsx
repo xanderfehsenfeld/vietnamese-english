@@ -4,32 +4,32 @@ import DefinitionPage from '../DefinitionPage'
 import { AppContainer } from '../SearchPage'
 import axios from 'axios'
 import { Link, Switch, Route } from 'react-router-dom'
-import VocabularyBadge from '../VocabularyBadge'
+import SavedWordsBadge from '../SavedWordsBadge'
 import { orderBy } from 'lodash'
 
 interface IState {
   savedWords: string[]
-  isFetchingVocabulary: boolean
+  isFetchingSavedWords: boolean
   didInitialFetch: boolean
   selectedWord?: string
 }
-export class VocabularyContainer extends Container<IState> {
+export class SavedWordsContainer extends Container<IState> {
   state: IState = {
     savedWords: [],
-    isFetchingVocabulary: false,
+    isFetchingSavedWords: false,
     didInitialFetch: false,
   }
   selectWord = (word: string) => {
     this.setState({ selectedWord: word })
   }
-  persistVocabulary = async (state: any) => await axios.post('state', state)
-  fetchVocabulary = async () => {
-    this.setState({ isFetchingVocabulary: true })
+  persistSavedWords = async (state: any) => await axios.post('state', state)
+  fetchSavedWords = async () => {
+    this.setState({ isFetchingSavedWords: true })
     try {
       const state = (await axios.get('state')).data
       this.setState({
         savedWords: state,
-        isFetchingVocabulary: false,
+        isFetchingSavedWords: false,
         didInitialFetch: true,
       })
     } catch (e) {
@@ -37,7 +37,7 @@ export class VocabularyContainer extends Container<IState> {
     }
 
     this.setState({
-      isFetchingVocabulary: false,
+      isFetchingSavedWords: false,
       didInitialFetch: true,
     })
   }
@@ -45,40 +45,38 @@ export class VocabularyContainer extends Container<IState> {
   addWordToSavedWords = async (word: string) => {
     const newSavedWords = this.state.savedWords.concat([word])
     this.setState({ savedWords: newSavedWords })
-    await this.persistVocabulary(newSavedWords)
+    await this.persistSavedWords(newSavedWords)
   }
 
-  removeWordFromVocabulary = async (word: string) => {
+  removeWordFromSavedWords = async (word: string) => {
     const newSavedWords = this.state.savedWords.filter((w) => w !== word)
     this.setState({ savedWords: newSavedWords })
-    await this.persistVocabulary(newSavedWords)
+    await this.persistSavedWords(newSavedWords)
   }
 }
 
-const Vocabulary = ({
+const SavedWords = ({
   style,
 }: {
   style?: React.HTMLAttributes<HTMLDivElement>
 }) => (
-  <Subscribe to={[VocabularyContainer, AppContainer]}>
+  <Subscribe to={[SavedWordsContainer, AppContainer]}>
     {(
-      { state, selectWord }: VocabularyContainer,
+      { state, selectWord }: SavedWordsContainer,
       { state: stateWithDictionary, fetchTranslations }: AppContainer,
     ) => {
       const {
         savedWords,
-        isFetchingVocabulary,
+        isFetchingSavedWords,
         didInitialFetch,
         selectedWord,
       } = state
 
-      if (!isFetchingVocabulary && !didInitialFetch) {
+      if (!isFetchingSavedWords && !didInitialFetch) {
         return null
-      } else if (isFetchingVocabulary) {
+      } else if (isFetchingSavedWords) {
         return (
           <div style={{ height: '100%' }}>
-            <h3>Vocabulary</h3>
-
             <span>Fetching...</span>
           </div>
         )
@@ -101,9 +99,6 @@ const Vocabulary = ({
         }
         return (
           <div style={style}>
-            <h3>
-              Vocabulary <VocabularyBadge />
-            </h3>
             <div>
               {dictionary &&
                 savedWordsInOrder
@@ -153,4 +148,4 @@ const Vocabulary = ({
   </Subscribe>
 )
 
-export default Vocabulary
+export default SavedWords

@@ -18,7 +18,7 @@ const GraphInstructions = () => (
       </Badge>
     ))}
     <Badge variant={'success'} style={{ marginLeft: 14, marginBottom: 8 }}>
-      {'saved to vocabulary'}
+      {'saved'}
     </Badge>
     <Badge variant={'warning'} style={{ marginLeft: 14, marginBottom: 8 }}>
       {'not saved'}
