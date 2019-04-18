@@ -5,8 +5,7 @@ import { AppContainer } from '../SearchPage'
 import axios from 'axios'
 import { Link, Switch, Route } from 'react-router-dom'
 import VocabularyBadge from '../VocabularyBadge'
-
-import BootstrapContainer from 'react-bootstrap/Container'
+import { orderBy } from 'lodash'
 
 interface IState {
   savedWords: string[]
@@ -56,7 +55,11 @@ export class VocabularyContainer extends Container<IState> {
   }
 }
 
-const Vocabulary = () => (
+const Vocabulary = ({
+  style,
+}: {
+  style?: React.HTMLAttributes<HTMLDivElement>
+}) => (
   <Subscribe to={[VocabularyContainer, AppContainer]}>
     {(
       { state, selectWord }: VocabularyContainer,
@@ -86,7 +89,10 @@ const Vocabulary = () => (
           isFetchingTranslations,
         } = stateWithDictionary
 
-        const savedWordsInOrder = savedWords.slice(0, 15).reverse()
+        const savedWordsInOrder = orderBy(
+          savedWords.slice(0, 15).reverse(),
+          (w) => !(w === selectedWord),
+        )
 
         const savedWordsWithoutTranslations = savedWords.filter(
           (w) => !translationVietnameseEnglish[w],
@@ -96,51 +102,49 @@ const Vocabulary = () => (
           fetchTranslations(savedWordsWithoutTranslations)
         }
         return (
-          <BootstrapContainer>
-            <div style={{ height: '100%' }}>
-              <h3>
-                Vocabulary <VocabularyBadge />
-              </h3>
-              <div>
-                {dictionary &&
-                  savedWordsInOrder
+          <div style={style}>
+            <h3>
+              Vocabulary <VocabularyBadge />
+            </h3>
+            <div>
+              {dictionary &&
+                savedWordsInOrder
 
-                    .map((v) => ({ text: v, definitions: dictionary[v] }))
-                    .map((v) => (
-                      <div
-                        key={v.text}
-                        className={'suggestion'}
-                        style={{
-                          cursor: 'pointer',
-                          paddingBottom: 4,
-                          paddingTop: 3,
-                        }}
-                        onClick={() => selectWord(v.text)}
+                  .map((v) => ({ text: v, definitions: dictionary[v] }))
+                  .map((v) => (
+                    <div
+                      key={v.text}
+                      className={'suggestion'}
+                      style={{
+                        cursor: 'pointer',
+                        paddingBottom: 4,
+                        paddingTop: 3,
+                      }}
+                      onClick={() => selectWord(v.text)}
+                    >
+                      <DefinitionPage
+                        translation={translationVietnameseEnglish[v.text]}
+                        definitions={v.definitions}
+                        text={v.text}
+                        isSelected={selectedWord === v.text}
                       >
-                        <DefinitionPage
-                          translation={translationVietnameseEnglish[v.text]}
-                          definitions={v.definitions}
-                          text={v.text}
-                          isSelected={selectedWord === v.text}
-                        >
-                          {v.text}
-                        </DefinitionPage>
-                      </div>
-                    ))}
-                {dictionary && savedWords.length === 0 && (
-                  <h6>
-                    Nothing here. Add words using the{' '}
-                    <Switch>
-                      <Route path={'/'} exact render={() => 'Search pane.'} />
-                      <Route
-                        render={() => <Link to={'/'}>{'Search pane.'}</Link>}
-                      />
-                    </Switch>
-                  </h6>
-                )}
-              </div>
+                        {v.text}
+                      </DefinitionPage>
+                    </div>
+                  ))}
+              {dictionary && savedWords.length === 0 && (
+                <h6>
+                  Nothing here. Add words using the{' '}
+                  <Switch>
+                    <Route path={'/'} exact render={() => 'Search pane.'} />
+                    <Route
+                      render={() => <Link to={'/'}>{'Search pane.'}</Link>}
+                    />
+                  </Switch>
+                </h6>
+              )}
             </div>
-          </BootstrapContainer>
+          </div>
         )
       }
     }}

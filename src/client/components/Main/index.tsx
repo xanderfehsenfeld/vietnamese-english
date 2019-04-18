@@ -5,6 +5,7 @@ import Header from '../Header'
 import { AppContainer } from '../SearchPage'
 import Vocabulary, { VocabularyContainer } from '../Vocabulary'
 import GraphWithContainers from '../WordGraph'
+import Container from 'react-bootstrap/Container'
 
 const Main = () => (
   <UnstatedProvider>
@@ -28,7 +29,14 @@ const Main = () => (
     <Router>
       <Header />
       <Switch>
-        <Route component={Vocabulary} path={'/vocabulary'} />
+        <Route
+          render={() => (
+            <Container fluid={false} style={{ paddingTop: 15 }}>
+              <Vocabulary />
+            </Container>
+          )}
+          path={'/vocabulary'}
+        />
         <Route component={GraphWithContainers} path={'/'} exact />
       </Switch>
     </Router>

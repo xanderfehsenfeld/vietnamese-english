@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Graph } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import Search, { AppContainer } from '../SearchPage'
-import { VocabularyContainer } from '../Vocabulary'
+import Vocabulary, { VocabularyContainer } from '../Vocabulary'
 import { Dictionary } from '../../../model'
 import {
   getGraphDataWithNextNodeAdded,
@@ -16,6 +16,8 @@ import GraphNode, { IGraphNode } from './components/GraphNode'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
+import Button from 'react-bootstrap/Button'
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 
 const config: IReactD3Config = {
   automaticRearrangeAfterDropNode: true,
@@ -86,6 +88,9 @@ export interface IGraphData {
 interface IState {
   dataToRender?: IGraphData
   lastClicked?: { x: number; y: number }
+  mode: 'Search' | 'Vocabulary'
+  lastClickedPrettify: number
+  prettifyIsDisabled: boolean
 }
 
 interface IPropsFromUnstated {
@@ -104,7 +109,11 @@ class WordGraph extends React.Component<IProps, IState> {
   componentDidMount = () => {
     setTimeout(this.initializeWordsInVocabulary, 1000)
   }
-  state: IState = {}
+  state: IState = {
+    mode: 'Search',
+    lastClickedPrettify: new Date().getTime(),
+    prettifyIsDisabled: false,
+  }
   initializeWordsInVocabulary = () => {
     const { savedWords } = this.props
     savedWords.forEach((word, i) =>
@@ -124,6 +133,15 @@ class WordGraph extends React.Component<IProps, IState> {
         this.removeNode(removedWord)
       }
     }
+  }
+
+  onClickPrettify = () => {
+    this.setState({
+      lastClickedPrettify: new Date().getTime(),
+      prettifyIsDisabled: true,
+    })
+
+    setTimeout(() => this.setState({ prettifyIsDisabled: false }), 1000)
   }
 
   removeNode = (id: string) => {
@@ -207,9 +225,23 @@ class WordGraph extends React.Component<IProps, IState> {
     }
   }
 
+  switchMode = (mode: 'Search' | 'Vocabulary') => this.setState({ mode })
+
   render() {
-    const { dataToRender } = this.state
-    const { height, width, onChange, selectWord, selectedWord } = this.props
+    const {
+      dataToRender,
+      mode,
+      lastClickedPrettify,
+      prettifyIsDisabled,
+    } = this.state
+    const {
+      height,
+      width,
+      onChange,
+      selectWord,
+      selectedWord,
+      savedWords,
+    } = this.props
     const { onClickNode } = this
     if (dataToRender) {
       dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
@@ -232,7 +264,13 @@ class WordGraph extends React.Component<IProps, IState> {
         >
           {dataToRender && dataToRender.nodes.length ? (
             <Graph
+              key={lastClickedPrettify}
               onClickNode={async (id: string) => {
+                // if (savedWords.includes(id)) {
+                //   this.switchMode('Vocabulary')
+                // } else {
+                //   this.switchMode('Search')
+                // }
                 if (selectedWord === id) {
                   onClickNode(id)
                 } else {
@@ -250,10 +288,69 @@ class WordGraph extends React.Component<IProps, IState> {
             />
           ) : null}
         </div>
-        <Container fluid style={{ height: '100%', overflow: 'hidden' }}>
+        <Container
+          fluid={false}
+          style={{ height: '100%', overflow: 'hidden', paddingTop: 15 }}
+        >
           <Row noGutters>
             <Col md={5} style={{ overflowY: 'auto' }}>
-              <Search />
+              <div
+                style={{
+                  padding: 14,
+                  paddingTop: 5,
+                  justifyContent: 'space-between',
+                  display: 'flex',
+                }}
+              >
+                <ButtonGroup
+                  style={{
+                    width: '100%',
+                    backgroundColor: 'white',
+                    marginRight: 15,
+                  }}
+                >
+                  {['Search', 'Vocabulary'].map(
+                    (modeForThisButton, i: number) => (
+                      <Button
+                        active={mode === modeForThisButton}
+                        variant={'outline-secondary'}
+                        key={i}
+                        onClick={() => this.switchMode(modeForThisButton)}
+                      >
+                        {modeForThisButton}
+                      </Button>
+                    ),
+                  )}
+                </ButtonGroup>
+
+                <Button
+                  disabled={prettifyIsDisabled}
+                  variant={'success'}
+                  onClick={this.onClickPrettify}
+                >
+                  Prettify
+                </Button>
+              </div>
+              {mode === 'Search' ? (
+                <Search />
+              ) : (
+                <div
+                  style={{
+                    height: '100%',
+                    overflowY: 'hidden',
+                    maxHeight: 'calc(100vh - 10px) ',
+                  }}
+                >
+                  <Vocabulary
+                    style={{
+                      height: '80%',
+                      overflowY: 'auto',
+                      paddingRight: 14,
+                      paddingLeft: 14,
+                    }}
+                  />
+                </div>
+              )}
             </Col>
 
             <Col
