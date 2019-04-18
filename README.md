@@ -2,9 +2,12 @@
 
 A website to search vietnamese
 
-## Install
+## Setup
 
-`npm i`. Recommended node version: v11.2.0.
+1. Clone this repo.
+1. Recommended node version: v11.2.0.
+1. Run `npm i` to install packages.
+1. Run `node fuse.js write:definitions` to generate the definitions.json file.
 
 ## Running locally
 
