@@ -3,7 +3,7 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
-import { pickBy, map, orderBy, uniqBy, uniq } from 'lodash'
+import { pickBy, map, orderBy, uniqBy, uniq, throttle, once } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 
 interface ISuggestion {
@@ -19,6 +19,7 @@ interface ISavedWordsState {
   didInitialFetch: boolean
   selectedWord?: string
 }
+
 type IState = ISavedWordsState & {
   query: string
   suggestions?: ISuggestion[]
@@ -172,7 +173,7 @@ export class AppContainer extends Container<IState> {
   selectWord = (word: string) => {
     this.setState({ selectedWord: word })
   }
-  persistState = async (state: SubType<IState>) => {
+  persistState = throttle(async (state: SubType<IState>) => {
     const {
       translationVietnameseEnglish,
       savedWords,
@@ -185,8 +186,8 @@ export class AppContainer extends Container<IState> {
       checkedWords,
       ...state,
     })
-  }
-  fetchState = async () => {
+  }, 5000)
+  fetchState = once(async () => {
     this.setState({ isFetchingSavedWords: true })
     try {
       const state: SubType<IState> = (await axios.get('state')).data
@@ -203,7 +204,7 @@ export class AppContainer extends Container<IState> {
       isFetchingSavedWords: false,
       didInitialFetch: true,
     })
-  }
+  })
 
   addWordToSavedWords = async (word: string) => {
     const { savedWords } = this.state

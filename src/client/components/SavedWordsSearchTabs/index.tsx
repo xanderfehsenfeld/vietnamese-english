@@ -47,7 +47,7 @@ const SavedWordsSearchTabs = withRouter(({ location, history, children }) => (
       >
         <SavedWords
           style={{
-            height: '80%',
+            height: '100%',
             overflowY: 'auto',
             paddingRight: 14,
             paddingLeft: 14,

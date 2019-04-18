@@ -12,7 +12,6 @@ interface IProps {
 
 const GraphNode = ({
   hiddenAdjacentNodes,
-  color,
   id,
   removeself,
 }: IGraphNode & IProps) => {
@@ -24,9 +23,18 @@ const GraphNode = ({
   return (
     <Subscribe to={[AppContainer]}>
       {({ state: state }: AppContainer) => {
-        const { translationVietnameseEnglish, selectedWord } = state
+        const { translationVietnameseEnglish, selectedWord, savedWords } = state
         const isSelected = selectedWord === id
         const translation = translationVietnameseEnglish[id]
+
+        let backgroundColor
+        if (isSelected) {
+          backgroundColor = 'rgb(123, 169, 248)'
+        } else if (savedWords.includes(id)) {
+          backgroundColor = '#28a745'
+        } else {
+          backgroundColor = '#ffc107'
+        }
         return (
           <React.Fragment>
             <div
@@ -34,7 +42,7 @@ const GraphNode = ({
                 isSelected ? 'isSelected' : ''
               }`}
               style={{
-                backgroundColor: isSelected ? 'rgb(123, 169, 248)' : color,
+                backgroundColor,
               }}
             >
               {hiddenAdjacentNodesCount}

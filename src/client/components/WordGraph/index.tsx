@@ -14,11 +14,11 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
-import Button from 'react-bootstrap/Button'
 import Tab from 'react-bootstrap/Tab'
+import ContainerDimensions from 'react-container-dimensions'
 
 const config: IReactD3Config = {
-  panAndZoom: true,
+  panAndZoom: false,
   automaticRearrangeAfterDropNode: true,
   collapsible: false,
   directed: true,
@@ -81,7 +81,7 @@ interface IState {
   prettifyIsDisabled: boolean
 }
 
-interface IPropsFromUnstated {
+interface IProps {
   wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
   savedWords: string[]
   onChange: (word: string) => void
@@ -89,10 +89,7 @@ interface IPropsFromUnstated {
   selectedWord?: string
   dictionary: Dictionary
 }
-type IProps = IPropsFromUnstated & {
-  height: number
-  width: number
-}
+
 class WordGraph extends React.Component<IProps, IState> {
   componentDidMount = () => {
     setTimeout(this.initializeSavedWords, 1000)
@@ -179,15 +176,6 @@ class WordGraph extends React.Component<IProps, IState> {
     return graphData
   }
 
-  addColorToNodes = (nodes: IGraphNode[]): IGraphNode[] => {
-    const { savedWords } = this.props
-    return nodes.map(({ id, ...rest }) => ({
-      id,
-      ...rest,
-      color: savedWords.includes(id) ? '#28a745' : '#ffc107',
-    }))
-  }
-
   setDataToRender = (dataToRender: IGraphData) => {
     this.setState({ dataToRender: { ...dataToRender } })
   }
@@ -212,70 +200,66 @@ class WordGraph extends React.Component<IProps, IState> {
   }
   render() {
     const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
-    const { height, width, onChange, selectWord, selectedWord } = this.props
+    const { onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
-    if (dataToRender) {
-      dataToRender.nodes = this.addColorToNodes(dataToRender.nodes)
-    }
-
     config.node.viewGenerator = (props: IGraphNode) => (
       <GraphNode {...props} removeself={this.removeNode} />
     )
     return (
-      <div>
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            cursor: 'grab',
-          }}
-          onClick={(e) =>
-            this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
-          }
-        >
-          {dataToRender && dataToRender.nodes.length ? (
-            <Graph
-              key={lastClickedPrettify}
-              onClickNode={async (id: string) => {
-                if (selectedWord === id) {
-                  onClickNode(id)
-                } else {
-                  await onChange(id)
-                  selectWord(id)
+      <Container fluid={false} style={{ marginTop: 15 }}>
+        <Row noGutters>
+          <Col lg={5} className={'d-none d-lg-block'}>
+            <SavedWordsSearchTabs>
+              <Tab
+                style={{ flex: 1, width: '100%', textAlign: 'center' }}
+                disabled={prettifyIsDisabled}
+                variant={'success'}
+                title={<div onClick={this.onClickPrettify}>{'Prettify'}</div>}
+              />
+            </SavedWordsSearchTabs>
+          </Col>
+          <Col lg={7}>
+            <div
+              style={{
+                cursor: 'grab',
+                width: '100%',
+                height: '100%',
+              }}
+              onClick={(e) =>
+                this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
+              }
+            >
+              <ContainerDimensions>
+                {({ height, width }) =>
+                  dataToRender && dataToRender.nodes.length ? (
+                    <Graph
+                      key={lastClickedPrettify}
+                      onClickNode={async (id: string) => {
+                        if (selectedWord === id) {
+                          onClickNode(id)
+                        } else {
+                          await onChange(id)
+                          selectWord(id)
+                        }
+                      }}
+                      id="graph-id"
+                      data={dataToRender}
+                      config={{
+                        ...config,
+                        height: height - 73,
+                        width: width - 10,
+                      }}
+                    />
+                  ) : null
                 }
-              }}
-              id="graph-id"
-              data={dataToRender}
-              config={{
-                ...config,
-                height: height - 73,
-                width: width - 10,
-              }}
-            />
-          ) : null}
-        </div>
-        <Container fluid={false} style={{ marginTop: 15 }}>
-          <Row noGutters>
-            <Col lg={5} className={'d-none d-lg-block'}>
-              <SavedWordsSearchTabs>
-                <Tab
-                  style={{ flex: 1, width: '100%', textAlign: 'center' }}
-                  disabled={prettifyIsDisabled}
-                  variant={'success'}
-                  title={<div onClick={this.onClickPrettify}>{'Prettify'}</div>}
-                />
-              </SavedWordsSearchTabs>
-            </Col>
-          </Row>
-        </Container>
-      </div>
+              </ContainerDimensions>
+            </div>
+          </Col>
+        </Row>
+      </Container>
     )
   }
 }
-
-const mapSizesToProps = (sizes: any) => sizes
-
-const WordGraphWithDimensions = withSizes(mapSizesToProps)(WordGraph)
 
 const GraphWithContainers = () => (
   <Subscribe to={[AppContainer]}>
@@ -289,7 +273,7 @@ const GraphWithContainers = () => (
       } = state
 
       if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
-        const props: IPropsFromUnstated = {
+        const props: IProps = {
           wordsWithoutSpacesMappedToCompoundWords,
           dictionary,
           savedWords: checkedWords.filter((v) => savedWords.includes(v)),
@@ -297,7 +281,7 @@ const GraphWithContainers = () => (
           selectedWord,
           onChange: changeSearchQuery,
         }
-        return <WordGraphWithDimensions {...props} />
+        return <WordGraph {...props} />
       } else {
         return null
       }
