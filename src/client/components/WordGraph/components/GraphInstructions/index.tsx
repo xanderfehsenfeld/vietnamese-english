@@ -9,6 +9,7 @@ const GraphInstructions = () => (
       'click a node to expand related words',
     ].map((instruction, i) => (
       <Badge
+        className={'d-none d-lg-inline-block'}
         key={i}
         style={{ marginLeft: 14, marginBottom: 8 }}
         variant="secondary"

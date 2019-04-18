@@ -282,7 +282,11 @@ class WordGraph extends React.Component<IProps, IState> {
           style={{ height: '100%', overflow: 'hidden', paddingTop: 15 }}
         >
           <Row noGutters>
-            <Col md={5} style={{ overflowY: 'auto' }}>
+            <Col
+              lg={5}
+              style={{ overflowY: 'auto' }}
+              className={'d-none d-lg-block'}
+            >
               <div
                 style={{
                   padding: 14,
@@ -345,7 +349,7 @@ class WordGraph extends React.Component<IProps, IState> {
             </Col>
 
             <Col
-              md={7}
+              lg={7}
               style={{
                 paddingTop: 1,
                 pointerEvents: 'none',
