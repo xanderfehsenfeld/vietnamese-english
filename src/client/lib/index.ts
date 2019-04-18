@@ -51,32 +51,12 @@ export const removeNodeFromGraphData = (
   toRemove: string,
   graphData: IGraphData,
 ): IGraphData => {
-  const nodesWhichAreNotToRemove = graphData.nodes.filter(
-    ({ id }) => id !== toRemove,
-  )
+  const nodes = graphData.nodes.filter(({ id }) => id !== toRemove)
   const links = graphData.links.filter(
     ({ source, target }) => source !== toRemove && target !== toRemove,
   )
 
-  const nodesToRemove = graphData.links
-    .filter(({ source, target }) => source === toRemove || target === toRemove)
-    .map(({ source, target }) => (source === toRemove ? target : source))
-    .filter((id) => {
-      const thereAreNoLinksToThisNode = !links.some(
-        ({ source, target }) => id === source || id === target,
-      )
-
-      const node = graphData.nodes.find(({ id: idOfNode }) => idOfNode === id)
-      const nodeIsNotGreen = node ? node.color !== 'green' : true
-
-      return thereAreNoLinksToThisNode && nodeIsNotGreen
-    })
-
-  const nodes = nodesWhichAreNotToRemove.filter(
-    ({ id }) => !nodesToRemove.includes(id),
-  )
-
-  return { nodes, links: links }
+  return { nodes, links }
 }
 export const mergeGraphDatas = (a: IGraphData, b: IGraphData): IGraphData => {
   const nodes = uniqBy(a.nodes.concat(b.nodes), ({ id }) => id)

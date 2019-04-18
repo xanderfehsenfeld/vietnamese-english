@@ -3,12 +3,13 @@ import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import { AppContainer } from '../SearchPage'
 import { Dictionary } from '../../../model'
+import connect from 'unstated-connect2'
+
 import {
   getGraphDataWithNextNodeAdded,
   mergeGraphDatas,
   removeNodeFromGraphData,
 } from '../../lib'
-import withSizes from 'react-sizes'
 import GraphNode from '../GraphNode'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
@@ -82,21 +83,21 @@ interface IState {
 }
 
 interface IProps {
-  wordsWithoutSpacesMappedToCompoundWords: { [key: string]: string[] }
+  wordsWithoutSpacesMappedToCompoundWords?: { [key: string]: string[] }
   savedWords: string[]
   onChange: (word: string) => void
   selectWord: (word: string) => void
   selectedWord?: string
-  dictionary: Dictionary
+  dictionary?: Dictionary
 }
 
 class WordGraph extends React.Component<IProps, IState> {
-  componentDidMount = () => {
-    setTimeout(this.initializeSavedWords, 1000)
-  }
   state: IState = {
     lastClickedPrettify: new Date().getTime(),
     prettifyIsDisabled: false,
+  }
+  componentDidMount = () => {
+    setTimeout(this.initializeSavedWords, 1000)
   }
   initializeSavedWords = () => {
     const { savedWords } = this.props
@@ -145,33 +146,36 @@ class WordGraph extends React.Component<IProps, IState> {
       nodes: [{ id: word }],
       links: [],
     }
+    if (wordsWithoutSpacesMappedToCompoundWords) {
+      const graphDataMergedWithPrevious = previousDataToRender
+        ? mergeGraphDatas(previousDataToRender, initialGraphData)
+        : initialGraphData
 
-    const graphDataMergedWithPrevious = previousDataToRender
-      ? mergeGraphDatas(previousDataToRender, initialGraphData)
-      : initialGraphData
+      const dataToRender = getGraphDataWithNextNodeAdded(
+        word,
+        graphDataMergedWithPrevious,
+        wordsWithoutSpacesMappedToCompoundWords,
+        lastClicked,
+      )
 
-    const dataToRender = getGraphDataWithNextNodeAdded(
-      word,
-      graphDataMergedWithPrevious,
-      wordsWithoutSpacesMappedToCompoundWords,
-      lastClicked,
-    )
+      const dataWithDefinitions = this.populateGraphDataWithDefinitions(
+        dataToRender,
+      )
 
-    const dataWithDefinitions = this.populateGraphDataWithDefinitions(
-      dataToRender,
-    )
-
-    this.setDataToRender(dataWithDefinitions)
+      this.setDataToRender(dataWithDefinitions)
+    }
   }
 
   populateGraphDataWithDefinitions = (graphData: IGraphData): IGraphData => {
     const { dictionary } = this.props
 
-    graphData.nodes = graphData.nodes.map(({ id, ...rest }) => ({
-      definitions: dictionary[id],
-      id,
-      ...rest,
-    }))
+    if (dictionary) {
+      graphData.nodes = graphData.nodes.map(({ id, ...rest }) => ({
+        definitions: dictionary[id],
+        id,
+        ...rest,
+      }))
+    }
 
     return graphData
   }
@@ -183,7 +187,7 @@ class WordGraph extends React.Component<IProps, IState> {
   onClickNode = (idOfNodeClicked: string) => {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
     const { dataToRender: previousData, lastClicked } = this.state
-    if (previousData) {
+    if (previousData && wordsWithoutSpacesMappedToCompoundWords) {
       const nextDataToRender = getGraphDataWithNextNodeAdded(
         idOfNodeClicked,
         previousData,
@@ -207,7 +211,7 @@ class WordGraph extends React.Component<IProps, IState> {
     )
     return (
       <Container fluid={false} style={{ marginTop: 15 }}>
-        <Row noGutters>
+        <Row>
           <Col lg={5} className={'d-none d-lg-block'}>
             <SavedWordsSearchTabs>
               <Tab
@@ -224,6 +228,8 @@ class WordGraph extends React.Component<IProps, IState> {
                 cursor: 'grab',
                 width: '100%',
                 height: '100%',
+                minHeight: 'calc(100vh - 87px)',
+                border: 'solid 1px #dee2e6',
               }}
               onClick={(e) =>
                 this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
@@ -261,32 +267,26 @@ class WordGraph extends React.Component<IProps, IState> {
   }
 }
 
-const GraphWithContainers = () => (
-  <Subscribe to={[AppContainer]}>
-    {({ state, changeSearchQuery, selectWord }: AppContainer) => {
-      const {
-        dictionary,
-        wordsWithoutSpacesMappedToCompoundWords,
-        checkedWords,
-        savedWords,
-        selectedWord,
-      } = state
-
-      if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
-        const props: IProps = {
-          wordsWithoutSpacesMappedToCompoundWords,
-          dictionary,
-          savedWords: checkedWords.filter((v) => savedWords.includes(v)),
-          selectWord,
-          selectedWord,
-          onChange: changeSearchQuery,
-        }
-        return <WordGraph {...props} />
-      } else {
-        return null
-      }
-    }}
-  </Subscribe>
-)
+const GraphWithContainers = connect({
+  container: AppContainer,
+  selector: ({ container }: { container: AppContainer }): IProps => {
+    const { selectWord, changeSearchQuery } = container
+    const {
+      dictionary,
+      wordsWithoutSpacesMappedToCompoundWords,
+      checkedWords,
+      savedWords,
+      selectedWord,
+    } = container.state
+    return {
+      wordsWithoutSpacesMappedToCompoundWords,
+      dictionary,
+      savedWords: checkedWords.filter((v) => savedWords.includes(v)),
+      selectWord,
+      selectedWord,
+      onChange: changeSearchQuery,
+    }
+  },
+})(WordGraph)
 
 export default GraphWithContainers

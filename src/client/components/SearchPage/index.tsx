@@ -186,7 +186,7 @@ export class AppContainer extends Container<IState> {
       checkedWords,
       ...state,
     })
-  }, 5000)
+  }, 100)
   fetchState = once(async () => {
     this.setState({ isFetchingSavedWords: true })
     try {
@@ -207,7 +207,10 @@ export class AppContainer extends Container<IState> {
   })
 
   addWordToSavedWords = async (word: string) => {
-    const { savedWords } = this.state
+    const { savedWords, checkedWords } = this.state
+    if (checkedWords.length < 3 && !checkedWords.includes(word)) {
+      this.toggleWordFromCheckedWords(word)
+    }
     const newSavedWords = savedWords.concat([word])
     this.setState({ savedWords: newSavedWords })
     await this.persistState({
@@ -216,11 +219,14 @@ export class AppContainer extends Container<IState> {
   }
 
   removeWordFromSavedWords = async (word: string) => {
-    const { savedWords } = this.state
+    const { savedWords, checkedWords } = this.state
     const newSavedWords = savedWords.filter((w) => w !== word)
     this.setState({ savedWords: newSavedWords })
     await this.persistState({
       savedWords: newSavedWords,
+      checkedWords: checkedWords.filter((checkedWord) =>
+        newSavedWords.includes(checkedWord),
+      ),
     })
   }
 }
