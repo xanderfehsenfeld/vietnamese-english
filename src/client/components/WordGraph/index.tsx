@@ -2,7 +2,6 @@ import * as React from 'react'
 import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
 import { AppContainer } from '../SearchPage'
-import { SavedWordsContainer } from '../SavedWords'
 import { Dictionary } from '../../../model'
 import {
   getGraphDataWithNextNodeAdded,
@@ -15,6 +14,8 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
+import Button from 'react-bootstrap/Button'
+import Tab from 'react-bootstrap/Tab'
 
 const config: IReactD3Config = {
   panAndZoom: true,
@@ -210,7 +211,7 @@ class WordGraph extends React.Component<IProps, IState> {
     }
   }
   render() {
-    const { dataToRender, lastClickedPrettify } = this.state
+    const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
     const { height, width, onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
     if (dataToRender) {
@@ -256,15 +257,14 @@ class WordGraph extends React.Component<IProps, IState> {
         <Container fluid={false} style={{ marginTop: 15 }}>
           <Row noGutters>
             <Col lg={5} className={'d-none d-lg-block'}>
-              {/* <Button
-                disabled={prettifyIsDisabled}
-                variant={'success'}
-                onClick={this.onClickPrettify}
-              >
-                Prettify
-              </Button> */}
-
-              <SavedWordsSearchTabs />
+              <SavedWordsSearchTabs>
+                <Tab
+                  style={{ flex: 1, width: '100%', textAlign: 'center' }}
+                  disabled={prettifyIsDisabled}
+                  variant={'success'}
+                  title={<div onClick={this.onClickPrettify}>{'Prettify'}</div>}
+                />
+              </SavedWordsSearchTabs>
             </Col>
           </Row>
         </Container>
@@ -278,18 +278,15 @@ const mapSizesToProps = (sizes: any) => sizes
 const WordGraphWithDimensions = withSizes(mapSizesToProps)(WordGraph)
 
 const GraphWithContainers = () => (
-  <Subscribe to={[AppContainer, SavedWordsContainer]}>
-    {(
-      { state, onChange }: AppContainer,
-      { state: savedWordsState, selectWord }: SavedWordsContainer,
-    ) => {
+  <Subscribe to={[AppContainer]}>
+    {({ state, changeSearchQuery, selectWord }: AppContainer) => {
       const {
         dictionary,
         wordsWithoutSpacesMappedToCompoundWords,
         checkedWords,
+        savedWords,
+        selectedWord,
       } = state
-
-      const { savedWords, selectedWord } = savedWordsState
 
       if (dictionary && wordsWithoutSpacesMappedToCompoundWords) {
         const props: IPropsFromUnstated = {
@@ -298,7 +295,7 @@ const GraphWithContainers = () => (
           savedWords: checkedWords.filter((v) => savedWords.includes(v)),
           selectWord,
           selectedWord,
-          onChange,
+          onChange: changeSearchQuery,
         }
         return <WordGraphWithDimensions {...props} />
       } else {

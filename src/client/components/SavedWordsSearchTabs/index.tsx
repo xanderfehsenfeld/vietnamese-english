@@ -7,7 +7,7 @@ import React from 'react'
 import { withRouter } from 'react-router'
 import './index.scss'
 
-const SavedWordsSearchTabs = withRouter(({ location, history }) => (
+const SavedWordsSearchTabs = withRouter(({ location, history, children }) => (
   <Tabs
     id="controlled-tab-example"
     activeKey={location.pathname}
@@ -55,6 +55,7 @@ const SavedWordsSearchTabs = withRouter(({ location, history }) => (
         />
       </div>
     </Tab>
+    {children}
   </Tabs>
 ))
 

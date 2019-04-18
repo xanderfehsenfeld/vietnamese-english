@@ -1,7 +1,7 @@
 import * as React from 'react'
 import connect from 'unstated-connect2'
-import { SavedWordsContainer } from '../SavedWords'
 import Badge from 'react-bootstrap/Badge'
+import { AppContainer } from '../SearchPage'
 
 interface IProps {
   count: number
@@ -12,8 +12,8 @@ const SavedWordsBadge = ({ count }: IProps) => (
 )
 
 export default connect({
-  container: SavedWordsContainer,
-  selector: ({ container }: { container: SavedWordsContainer }): IProps => ({
+  container: AppContainer,
+  selector: ({ container }: { container: AppContainer }): IProps => ({
     count: container.state.savedWords.length,
   }),
 })(SavedWordsBadge)

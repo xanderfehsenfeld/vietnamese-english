@@ -1,7 +1,5 @@
 import * as React from 'react'
 import { Definition } from '../../../model'
-
-import { SavedWordsContainer } from '../SavedWords'
 import { Subscribe } from 'unstated'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -15,7 +13,6 @@ const DefinitionPage = ({
   children,
   showDefinition = true,
   showExample = true,
-  isSelected,
   showRemoveButton = true,
   translation,
   isChecked,
@@ -30,15 +27,13 @@ const DefinitionPage = ({
   translation: string
   isChecked?: boolean
 }) => (
-  <Subscribe to={[SavedWordsContainer, AppContainer]}>
-    {(
-      {
-        addWordToSavedWords,
-        state,
-        removeWordFromSavedWords,
-      }: SavedWordsContainer,
-      { toggleWordFromCheckedWords }: AppContainer,
-    ) => {
+  <Subscribe to={[AppContainer]}>
+    {({
+      addWordToSavedWords,
+      state,
+      removeWordFromSavedWords,
+      toggleWordFromCheckedWords,
+    }: AppContainer) => {
       const { savedWords } = state
 
       const wordIsSaved = savedWords.includes(text)

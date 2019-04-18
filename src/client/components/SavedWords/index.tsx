@@ -1,66 +1,12 @@
-import { Subscribe, Container } from 'unstated'
+import { Subscribe } from 'unstated'
 import * as React from 'react'
 import DefinitionPage from '../DefinitionPage'
 import { AppContainer } from '../SearchPage'
-import axios from 'axios'
 import { Link, Switch, Route } from 'react-router-dom'
-import SavedWordsBadge from '../SavedWordsBadge'
-import { orderBy } from 'lodash'
-
-interface IState {
-  savedWords: string[]
-  isFetchingSavedWords: boolean
-  didInitialFetch: boolean
-  selectedWord?: string
-}
-export class SavedWordsContainer extends Container<IState> {
-  state: IState = {
-    savedWords: [],
-    isFetchingSavedWords: false,
-    didInitialFetch: false,
-  }
-  selectWord = (word: string) => {
-    this.setState({ selectedWord: word })
-  }
-  persistSavedWords = async (state: any) => await axios.post('state', state)
-  fetchSavedWords = async () => {
-    this.setState({ isFetchingSavedWords: true })
-    try {
-      const state = (await axios.get('state')).data
-      this.setState({
-        savedWords: state,
-        isFetchingSavedWords: false,
-        didInitialFetch: true,
-      })
-    } catch (e) {
-      console.error(e)
-    }
-
-    this.setState({
-      isFetchingSavedWords: false,
-      didInitialFetch: true,
-    })
-  }
-
-  addWordToSavedWords = async (word: string) => {
-    const newSavedWords = this.state.savedWords.concat([word])
-    this.setState({ savedWords: newSavedWords })
-    await this.persistSavedWords(newSavedWords)
-  }
-
-  removeWordFromSavedWords = async (word: string) => {
-    const newSavedWords = this.state.savedWords.filter((w) => w !== word)
-    this.setState({ savedWords: newSavedWords })
-    await this.persistSavedWords(newSavedWords)
-  }
-}
 
 const SavedWords = ({ style }: { style?: React.CSSProperties }) => (
-  <Subscribe to={[SavedWordsContainer, AppContainer]}>
-    {(
-      { state, selectWord }: SavedWordsContainer,
-      { state: stateWithDictionary, fetchTranslations }: AppContainer,
-    ) => {
+  <Subscribe to={[AppContainer]}>
+    {({ state, fetchTranslations, selectWord }: AppContainer) => {
       const {
         savedWords,
         isFetchingSavedWords,
@@ -82,7 +28,7 @@ const SavedWords = ({ style }: { style?: React.CSSProperties }) => (
           translationVietnameseEnglish,
           isFetchingTranslations,
           checkedWords,
-        } = stateWithDictionary
+        } = state
 
         const savedWordsInOrder = savedWords.slice(0, 15).reverse()
 

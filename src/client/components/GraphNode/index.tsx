@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Definition } from '../../../model'
-import { SavedWordsContainer } from '../SavedWords'
 import { Subscribe } from 'unstated'
 import './index.scss'
 import { AppContainer } from '../SearchPage'
@@ -23,10 +22,9 @@ const GraphNode = ({
       : ''
 
   return (
-    <Subscribe to={[SavedWordsContainer, AppContainer]}>
-      {({ state }: SavedWordsContainer, { state: appState }: AppContainer) => {
-        const { selectedWord } = state
-        const { translationVietnameseEnglish } = appState
+    <Subscribe to={[AppContainer]}>
+      {({ state: state }: AppContainer) => {
+        const { translationVietnameseEnglish, selectedWord } = state
         const isSelected = selectedWord === id
         const translation = translationVietnameseEnglish[id]
         return (

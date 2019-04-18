@@ -5,7 +5,6 @@ import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
 import { pickBy, map, orderBy, uniqBy, uniq } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
-import { SavedWordsContainer } from '../SavedWords'
 
 interface ISuggestion {
   text: string
@@ -13,7 +12,14 @@ interface ISuggestion {
   definitions: Definition[]
   start: number
 }
-interface IState {
+
+interface ISavedWordsState {
+  savedWords: string[]
+  isFetchingSavedWords: boolean
+  didInitialFetch: boolean
+  selectedWord?: string
+}
+type IState = ISavedWordsState & {
   query: string
   suggestions?: ISuggestion[]
   wordsWithoutSpacesMappedToCompoundWords?: { [key: string]: string[] }
@@ -26,6 +32,8 @@ interface IState {
   checkedWords: string[]
 }
 
+type SubType<Base> = { [Key in keyof Base]?: Base[Key] }
+
 const removeAccents = (str: string) =>
   str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
@@ -37,21 +45,27 @@ export class AppContainer extends Container<IState> {
     translationVietnameseEnglish: {},
     isFetchingTranslations: false,
     checkedWords: [],
+    savedWords: [],
+    isFetchingSavedWords: false,
+    didInitialFetch: false,
   }
 
   toggleWordFromCheckedWords = (word: string) => {
     const { checkedWords } = this.state
+    let newCheckedWords
     if (checkedWords.includes(word)) {
-      this.setState({ checkedWords: checkedWords.filter((v) => v !== word) })
+      newCheckedWords = checkedWords.filter((v) => v !== word)
     } else {
-      this.setState({ checkedWords: checkedWords.concat([word]) })
+      newCheckedWords = checkedWords.concat([word])
     }
+    this.setState({ checkedWords: newCheckedWords })
+    this.persistState({ checkedWords: newCheckedWords })
   }
 
   toggleShowExample = () => {
     this.setState({ showExample: !this.state.showExample })
   }
-  onChange = (changedQuery: string) => {
+  changeSearchQuery = (changedQuery: string) => {
     const formattedQuery = changedQuery.toLowerCase()
     const {
       dictionary,
@@ -154,22 +168,79 @@ export class AppContainer extends Container<IState> {
       isFetching: false,
     })
   }
+
+  selectWord = (word: string) => {
+    this.setState({ selectedWord: word })
+  }
+  persistState = async (state: SubType<IState>) => {
+    const {
+      translationVietnameseEnglish,
+      savedWords,
+      checkedWords,
+    } = this.state
+
+    await axios.post('state', {
+      translationVietnameseEnglish,
+      savedWords,
+      checkedWords,
+      ...state,
+    })
+  }
+  fetchState = async () => {
+    this.setState({ isFetchingSavedWords: true })
+    try {
+      const state: SubType<IState> = (await axios.get('state')).data
+      this.setState({
+        ...state,
+        isFetchingSavedWords: false,
+        didInitialFetch: true,
+      })
+    } catch (e) {
+      console.error(e)
+    }
+
+    this.setState({
+      isFetchingSavedWords: false,
+      didInitialFetch: true,
+    })
+  }
+
+  addWordToSavedWords = async (word: string) => {
+    const { savedWords } = this.state
+    const newSavedWords = savedWords.concat([word])
+    this.setState({ savedWords: newSavedWords })
+    await this.persistState({
+      savedWords: newSavedWords,
+    })
+  }
+
+  removeWordFromSavedWords = async (word: string) => {
+    const { savedWords } = this.state
+    const newSavedWords = savedWords.filter((w) => w !== word)
+    this.setState({ savedWords: newSavedWords })
+    await this.persistState({
+      savedWords: newSavedWords,
+    })
+  }
 }
 
 const Search = () => (
-  <Subscribe to={[AppContainer, SavedWordsContainer]}>
-    {(
-      { state, onChange, toggleShowExample }: AppContainer,
-      { state: savedWordsState, selectWord }: SavedWordsContainer,
-    ) => {
+  <Subscribe to={[AppContainer]}>
+    {({
+      state,
+      changeSearchQuery,
+      toggleShowExample,
+      selectWord,
+    }: AppContainer) => {
       const {
         showExample,
         query,
         isFetching,
         suggestions,
         translationVietnameseEnglish,
+        selectedWord,
+        savedWords,
       } = state
-      const { selectedWord, savedWords } = savedWordsState
 
       return (
         <React.Fragment>
@@ -190,7 +261,7 @@ const Search = () => (
                 isFetching ? 'Fetching...' : 'Search to add words...'
               }
               aria-label="Search"
-              onChange={(e) => onChange(e.target.value)}
+              onChange={(e) => changeSearchQuery(e.target.value)}
               value={query}
             />
           </div>
@@ -241,7 +312,7 @@ const Search = () => (
                         paddingTop: 3,
                       }}
                       onClick={() => {
-                        onChange(suggestion.text)
+                        changeSearchQuery(suggestion.text)
                         if (savedWords.includes(suggestion.text)) {
                           selectWord(suggestion.text)
                         }

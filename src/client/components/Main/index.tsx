@@ -3,25 +3,19 @@ import { Provider as UnstatedProvider, Subscribe } from 'unstated'
 import { HashRouter as Router, Switch, Route } from 'react-router-dom'
 import Header from '../Header'
 import { AppContainer } from '../SearchPage'
-import SavedWords, { SavedWordsContainer } from '../SavedWords'
+import SavedWords from '../SavedWords'
 import GraphWithContainers from '../WordGraph'
 import Container from 'react-bootstrap/Container'
 
 const Main = () => (
   <UnstatedProvider>
-    <Subscribe to={[AppContainer, SavedWordsContainer]}>
-      {(
-        { state, fetchDictionary }: AppContainer,
-        { state: savedWordsState, fetchSavedWords }: SavedWordsContainer,
-      ) => {
+    <Subscribe to={[AppContainer]}>
+      {({ state, fetchDictionary, fetchState }: AppContainer) => {
         if (!state.isFetching && !state.dictionary) {
           fetchDictionary()
         }
-        if (
-          !savedWordsState.isFetchingSavedWords &&
-          !savedWordsState.didInitialFetch
-        ) {
-          fetchSavedWords()
+        if (!state.isFetchingSavedWords && !state.didInitialFetch) {
+          fetchState()
         }
         return null
       }}
