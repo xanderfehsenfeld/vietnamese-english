@@ -4,7 +4,7 @@ A website to search vietnamese
 
 ## Install
 
-`npm i`
+`npm i`. Recommended node version: v11.2.0.
 
 ## Running locally
 
