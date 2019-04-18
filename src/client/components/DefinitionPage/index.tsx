@@ -99,7 +99,9 @@ const DefinitionPage = ({
               {wordIsSaved ? null : (
                 <Button
                   size={'sm'}
-                  onClick={(e) => {
+                  onClick={(
+                    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+                  ) => {
                     e.stopPropagation()
                     addWordToSavedWords(text)
                   }}
@@ -114,7 +116,9 @@ const DefinitionPage = ({
                   size={'sm'}
                   style={{ marginLeft: 10 }}
                   variant={'danger'}
-                  onClick={(e) => {
+                  onClick={(
+                    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+                  ) => {
                     e.stopPropagation()
                     removeWordFromSavedWords(text)
                   }}
@@ -133,7 +137,7 @@ const DefinitionPage = ({
                     cursor: 'pointer',
                     marginTop: 2,
                   }}
-                  onClick={(e) => {
+                  onClick={(e: React.MouseEvent) => {
                     toggleWordFromCheckedWords(text)
                     e.stopPropagation()
                   }}

@@ -1,6 +1,5 @@
-import { IGraphLink, IGraphData } from '..'
 import { uniqBy, compact, flatten, orderBy } from 'lodash'
-import { IGraphNode } from '../components/GraphNode'
+import { IGraphLink, IGraphData, IGraphNode } from 'react-d3-graph'
 
 const filterUniqueLinks = (links: IGraphLink[]) => {
   const alreadySeen: { [key: string]: boolean } = {}
@@ -62,12 +61,16 @@ export const removeNodeFromGraphData = (
   const nodesToRemove = graphData.links
     .filter(({ source, target }) => source === toRemove || target === toRemove)
     .map(({ source, target }) => (source === toRemove ? target : source))
-    .filter(
-      (id) =>
-        !links.some(({ source, target }) => id === source || id === target) &&
-        graphData.nodes.find(({ id: idOfNode }) => idOfNode === id).color !==
-          'green',
-    )
+    .filter((id) => {
+      const thereAreNoLinksToThisNode = !links.some(
+        ({ source, target }) => id === source || id === target,
+      )
+
+      const node = graphData.nodes.find(({ id: idOfNode }) => idOfNode === id)
+      const nodeIsNotGreen = node ? node.color !== 'green' : true
+
+      return thereAreNoLinksToThisNode && nodeIsNotGreen
+    })
 
   const nodes = nodesWhichAreNotToRemove.filter(
     ({ id }) => !nodesToRemove.includes(id),

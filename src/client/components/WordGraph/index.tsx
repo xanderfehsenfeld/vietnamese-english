@@ -1,27 +1,23 @@
 import * as React from 'react'
-import { Graph } from 'react-d3-graph'
+import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
 import { Subscribe } from 'unstated'
-import Search, { AppContainer } from '../SearchPage'
-import SavedWords, { SavedWordsContainer } from '../SavedWords'
+import { AppContainer } from '../SearchPage'
+import { SavedWordsContainer } from '../SavedWords'
 import { Dictionary } from '../../../model'
 import {
   getGraphDataWithNextNodeAdded,
   mergeGraphDatas,
   removeNodeFromGraphData,
-} from './lib'
-import GraphInstructions from './components/GraphInstructions'
+} from '../../lib'
 import withSizes from 'react-sizes'
-import { IReactD3Config } from './model'
-import GraphNode, { IGraphNode } from './components/GraphNode'
+import GraphNode from '../GraphNode'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
-import Button from 'react-bootstrap/Button'
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
-import SavedWordsBadge from '../SavedWordsBadge'
 import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
 
 const config: IReactD3Config = {
+  panAndZoom: true,
   automaticRearrangeAfterDropNode: true,
   collapsible: false,
   directed: true,
@@ -75,16 +71,6 @@ const config: IReactD3Config = {
     semanticStrokeWidth: false,
     strokeWidth: 4,
   },
-}
-
-export interface IGraphLink {
-  source: string
-  target: string
-}
-
-export interface IGraphData {
-  links: IGraphLink[]
-  nodes: IGraphNode[]
 }
 
 interface IState {
@@ -208,24 +194,23 @@ class WordGraph extends React.Component<IProps, IState> {
   onClickNode = (idOfNodeClicked: string) => {
     const { wordsWithoutSpacesMappedToCompoundWords } = this.props
     const { dataToRender: previousData, lastClicked } = this.state
-
-    const nextDataToRender = getGraphDataWithNextNodeAdded(
-      idOfNodeClicked,
-      previousData,
-      wordsWithoutSpacesMappedToCompoundWords,
-      lastClicked,
-    )
-
-    const dataWithDefinitions = this.populateGraphDataWithDefinitions(
-      nextDataToRender,
-    )
-
     if (previousData) {
+      const nextDataToRender = getGraphDataWithNextNodeAdded(
+        idOfNodeClicked,
+        previousData,
+        wordsWithoutSpacesMappedToCompoundWords,
+        lastClicked,
+      )
+
+      const dataWithDefinitions = this.populateGraphDataWithDefinitions(
+        nextDataToRender,
+      )
+
       this.setDataToRender(dataWithDefinitions)
     }
   }
   render() {
-    const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
+    const { dataToRender, lastClickedPrettify } = this.state
     const { height, width, onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
     if (dataToRender) {

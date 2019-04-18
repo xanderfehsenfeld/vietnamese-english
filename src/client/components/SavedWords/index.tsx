@@ -55,11 +55,7 @@ export class SavedWordsContainer extends Container<IState> {
   }
 }
 
-const SavedWords = ({
-  style,
-}: {
-  style?: React.HTMLAttributes<HTMLDivElement>
-}) => (
+const SavedWords = ({ style }: { style?: React.CSSProperties }) => (
   <Subscribe to={[SavedWordsContainer, AppContainer]}>
     {(
       { state, selectWord }: SavedWordsContainer,

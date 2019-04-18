@@ -1,15 +1,10 @@
 import * as React from 'react'
-import { Definition } from '../../../../../model'
-import { SavedWordsContainer } from '../../../SavedWords'
+import { Definition } from '../../../model'
+import { SavedWordsContainer } from '../SavedWords'
 import { Subscribe } from 'unstated'
 import './index.scss'
-import { AppContainer } from '../../../SearchPage'
-
-export interface IGraphNode {
-  id: string
-  hiddenAdjacentNodes?: string[]
-  color?: string
-}
+import { AppContainer } from '../SearchPage'
+import { IGraphNode } from 'react-d3-graph'
 
 interface IProps {
   definitions?: Definition[]

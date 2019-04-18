@@ -12,7 +12,7 @@ export const config = {
   OAUTH2_CALLBACK: '/auth/google/callback',
 }
 
-const extractProfile = (profile) => {
+const extractProfile = (profile: any) => {
   let imageUrl = ''
   if (profile.photos && profile.photos.length) {
     imageUrl = profile.photos[0].value
@@ -30,8 +30,6 @@ passport.use(
       clientID: config['OAUTH2_CLIENT_ID'],
       clientSecret: config['OAUTH2_CLIENT_SECRET'],
       callbackURL: config['OAUTH2_CALLBACK'],
-      accessType: 'offline',
-      userProfileURL: 'https://www.googleapis.com/oauth2/v3/userinfo',
     },
     (
       _accessToken: string,
@@ -58,7 +56,7 @@ export const redirectToLoginIfUnauthorized: RequestHandler = (
   res,
   next,
 ) => {
-  if (!req.user) {
+  if (!req.user && req.session) {
     req.session.oauth2return = req.originalUrl
     return res.redirect('/auth/login')
   }
@@ -79,7 +77,7 @@ oauth2Routes.get(
   '/auth/login',
 
   (req, res, next) => {
-    if (req.query.return) {
+    if (req.query.return && req.session) {
       req.session.oauth2return = req.query.return
     }
     next()
