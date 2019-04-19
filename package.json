@@ -16,6 +16,9 @@
     "test:dev": "jest --config ./jest/jest.config.js --watch"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^1.2.17",
+    "@fortawesome/free-solid-svg-icons": "^5.8.1",
+    "@fortawesome/react-fontawesome": "^0.1.4",
     "@google-cloud/automl": "^0.1.2",
     "@google-cloud/connect-datastore": "^2.0.2",
     "@google-cloud/datastore": "^3.1.2",
@@ -29,8 +32,10 @@
     "d3-drag": "^1.2.3",
     "express": "^4.16.4",
     "express-session": "^1.15.6",
+    "i": "^0.3.6",
     "lodash": "^4.17.11",
     "nodemon": "^1.18.11",
+    "npm": "^6.9.0",
     "passport": "^0.4.0",
     "passport-google-oauth20": "^2.0.0",
     "prop-types": "^15.7.2",

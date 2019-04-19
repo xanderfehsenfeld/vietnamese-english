@@ -1,6 +1,5 @@
 import * as React from 'react'
 import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
-import { Subscribe } from 'unstated'
 import { AppContainer } from '../SearchPage'
 import { Dictionary } from '../../../model'
 import connect from 'unstated-connect2'
@@ -17,6 +16,9 @@ import Container from 'react-bootstrap/Container'
 import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
 import Tab from 'react-bootstrap/Tab'
 import ContainerDimensions from 'react-container-dimensions'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import Tooltip from 'react-bootstrap/Tooltip'
 
 const config: IReactD3Config = {
   panAndZoom: false,
@@ -218,7 +220,18 @@ class WordGraph extends React.Component<IProps, IState> {
                 style={{ flex: 1, width: '100%', textAlign: 'center' }}
                 disabled={prettifyIsDisabled}
                 variant={'success'}
-                title={<div onClick={this.onClickPrettify}>{'Prettify'}</div>}
+                title={
+                  <OverlayTrigger
+                    placement={'bottom'}
+                    overlay={
+                      <Tooltip id={`tooltip-${'bottom'}`}>{`Prettify`}</Tooltip>
+                    }
+                  >
+                    <div onClick={this.onClickPrettify}>
+                      <FontAwesomeIcon icon={'magic'} size={'lg'} />
+                    </div>
+                  </OverlayTrigger>
+                }
               />
             </SavedWordsSearchTabs>
           </Col>

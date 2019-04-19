@@ -4,8 +4,27 @@ import { Subscribe } from 'unstated'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
-import Form from 'react-bootstrap/Form'
 import { AppContainer } from '../SearchPage'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import Tooltip from 'react-bootstrap/Tooltip'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import {
+  faBookmark,
+  faTrash,
+  faProjectDiagram,
+  faArrowRight,
+  faTimes,
+  faSlash,
+} from '@fortawesome/free-solid-svg-icons'
+library.add(
+  faTrash,
+  faProjectDiagram,
+  faArrowRight,
+  faTimes,
+  faBookmark,
+  faSlash,
+)
 
 const DefinitionPage = ({
   definitions,
@@ -92,51 +111,77 @@ const DefinitionPage = ({
               }}
             >
               {wordIsSaved ? null : (
-                <Button
-                  size={'sm'}
-                  onClick={(
-                    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-                  ) => {
-                    e.stopPropagation()
-                    addWordToSavedWords(text)
-                  }}
-                  variant={'secondary'}
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip id={`tooltip-${'bottom'}`}>{`Bookmark`}</Tooltip>
+                  }
                 >
-                  {'Save'}
-                </Button>
+                  <Button
+                    size={'sm'}
+                    onClick={(
+                      e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+                    ) => {
+                      e.stopPropagation()
+                      addWordToSavedWords(text)
+                    }}
+                    variant={'secondary'}
+                  >
+                    <FontAwesomeIcon icon="bookmark" />
+                  </Button>
+                </OverlayTrigger>
               )}
 
               {wordIsSaved && showRemoveButton && (
-                <Button
-                  size={'sm'}
-                  style={{ marginLeft: 10 }}
-                  variant={'danger'}
-                  onClick={(
-                    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-                  ) => {
-                    e.stopPropagation()
-                    removeWordFromSavedWords(text)
-                  }}
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip id={`tooltip-${'bottom'}`}>{`Unbookmark`}</Tooltip>
+                  }
                 >
-                  {'Remove'}
-                </Button>
+                  <Button
+                    size={'sm'}
+                    style={{ marginLeft: 10, position: 'relative' }}
+                    variant={'danger'}
+                    onClick={(
+                      e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+                    ) => {
+                      e.stopPropagation()
+                      removeWordFromSavedWords(text)
+                    }}
+                  >
+                    <FontAwesomeIcon icon="trash" />
+                  </Button>
+                </OverlayTrigger>
               )}
               {isChecked === true || isChecked === false ? (
-                <Form.Check
-                  type="checkbox"
-                  checked={isChecked}
-                  style={{
-                    transform: 'scale(1.5)',
-                    marginRight: 10,
-                    marginLeft: 10,
-                    cursor: 'pointer',
-                    marginTop: 2,
-                  }}
-                  onClick={(e: React.MouseEvent) => {
-                    toggleWordFromCheckedWords(text)
-                    e.stopPropagation()
-                  }}
-                />
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip id={`tooltip-${'bottom'}`}>
+                      {isChecked ? `Remove` : `Add`}
+                    </Tooltip>
+                  }
+                >
+                  <Button
+                    variant={isChecked ? 'warning' : 'success'}
+                    onClick={(e: React.MouseEvent) => {
+                      toggleWordFromCheckedWords(text)
+                      e.stopPropagation()
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      marginLeft: 10,
+                    }}
+                  >
+                    <FontAwesomeIcon icon="project-diagram" />
+                    <FontAwesomeIcon
+                      icon={isChecked ? 'times' : 'arrow-right'}
+                      size="xs"
+                    />
+                  </Button>
+                </OverlayTrigger>
               ) : null}
             </div>
           </Col>

@@ -5,7 +5,10 @@ import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
 import { pickBy, map, orderBy, uniqBy, uniq, throttle, once } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
-
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faBackspace } from '@fortawesome/free-solid-svg-icons'
+library.add(faBackspace)
 interface ISuggestion {
   text: string
   translation?: string
@@ -247,6 +250,7 @@ const Search = () => (
         translationVietnameseEnglish,
         selectedWord,
         savedWords,
+        checkedWords,
       } = state
 
       return (
@@ -258,6 +262,7 @@ const Search = () => (
               paddingLeft: 14,
               paddingTop: 3,
               paddingBottom: 3,
+              position: 'relative',
             }}
           >
             <input
@@ -271,6 +276,18 @@ const Search = () => (
               onChange={(e) => changeSearchQuery(e.target.value)}
               value={query}
             />
+            <div
+              onClick={query ? () => changeSearchQuery('') : undefined}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 29,
+                opacity: query ? 1 : 0.5,
+                cursor: query ? 'pointer' : undefined,
+              }}
+            >
+              <FontAwesomeIcon icon={'backspace'} pull={'right'} size={'lg'} />
+            </div>
           </div>
           {suggestions && suggestions.length !== 0 ? (
             <React.Fragment>
@@ -324,11 +341,15 @@ const Search = () => (
                           selectWord(suggestion.text)
                         }
                       }}
-                      title={'click to refine search'}
                     >
                       <DefinitionPage
                         definitions={suggestion.definitions}
                         text={suggestion.text}
+                        isChecked={
+                          savedWords.includes(suggestion.text)
+                            ? checkedWords.includes(suggestion.text)
+                            : undefined
+                        }
                         translation={
                           translationVietnameseEnglish[suggestion.text] || '...'
                         }

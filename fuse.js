@@ -58,6 +58,8 @@ context(
       }
     }
     getConfigForClient() {
+      const indexHTML = fs.readFileSync('./src/client/index.html', 'utf-8')
+
       return FuseBox.init({
         log: {
           showBundledFiles: false,
@@ -80,7 +82,13 @@ context(
           nodeModulesCSSHandler,
           JSONPlugin(),
           WebIndexPlugin({
-            template: 'src/client/index.html',
+            templateString: indexHTML.replace(
+              '$declare-process-env-script',
+
+              this.isProduction
+                ? `<script>window.process = {env: {NODE_ENV: 'production' }}</script>`
+                : '',
+            ),
             path: '.',
           }),
           this.isProduction &&
@@ -92,7 +100,7 @@ context(
               treeshake: true,
               extendServerImport: true,
               ensureES5: true,
-              replaceProcessEnv: true,
+              replaceProcessEnv: false,
             }),
         ],
       })
@@ -100,20 +108,24 @@ context(
 
     createBundleForClient(fuse) {
       const entryName = 'index.tsx'
-      fuse.bundle('vendor').instructions(`~ ${entryName}`)
+      const vendor = fuse.bundle('vendor').instructions(`~ ${entryName}`)
       const app = fuse.bundle('app')
       if (!this.isProduction) {
         app.hmr()
+        //vendor.watch()
         app.watch()
         app.sourceMaps(true)
         app.completed((proc) => {
           console.log('\x1b[36m%s\x1b[0m', 'client bundled')
-          // run the type checking
-          typeHelper.runSync()
         })
       } else {
         app.splitConfig({
           browser: '/',
+        })
+        app.completed((proc) => {
+          console.log('\x1b[36m%s\x1b[0m', 'client bundled')
+          // run the type checking
+          typeHelper.runSync()
         })
       }
       app.instructions(`> [${entryName}]`)

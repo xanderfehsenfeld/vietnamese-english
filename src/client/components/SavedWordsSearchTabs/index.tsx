@@ -6,15 +6,39 @@ import SavedWords from '../SavedWords'
 import React from 'react'
 import { withRouter } from 'react-router'
 import './index.scss'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import {
+  faSearch,
+  faMagic,
+  faBookmark,
+} from '@fortawesome/free-solid-svg-icons'
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
+import Tooltip from 'react-bootstrap/Tooltip'
+
+library.add(faSearch, faMagic, faBookmark)
+
+const iconSize = 'lg'
 
 const SavedWordsSearchTabs = withRouter(({ location, history, children }) => (
   <Tabs
-    id="controlled-tab-example"
+    id={'SavedWordsSearchTabs'}
     activeKey={location.pathname}
     onSelect={(key: string) => history.push(key)}
     style={{ marginBottom: 10 }}
   >
-    <Tab eventKey="/" title="Search" style={{ height: '100%' }}>
+    <Tab
+      eventKey="/graph"
+      title={
+        <OverlayTrigger
+          placement={'bottom'}
+          overlay={<Tooltip id={`tooltip-${'search'}`}>{`Search`}</Tooltip>}
+        >
+          <FontAwesomeIcon icon={'search'} size={iconSize} />
+        </OverlayTrigger>
+      }
+      style={{ height: '100%' }}
+    >
       <div
         style={{
           height: '100%',
@@ -29,11 +53,16 @@ const SavedWordsSearchTabs = withRouter(({ location, history, children }) => (
     </Tab>
     <Tab
       style={{ height: '100%' }}
-      eventKey="/SavedWordsTab"
+      eventKey="/graph/bookmarks"
       title={
-        <React.Fragment>
-          {'Saved Words'} <SavedWordsBadge />
-        </React.Fragment>
+        <OverlayTrigger
+          placement={'bottom'}
+          overlay={<Tooltip id={`tooltip-${'bottom'}`}>{`Bookmarks`}</Tooltip>}
+        >
+          <div>
+            <SavedWordsBadge />
+          </div>
+        </OverlayTrigger>
       }
     >
       <div

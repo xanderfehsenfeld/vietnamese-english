@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Provider as UnstatedProvider, Subscribe } from 'unstated'
-import { HashRouter as Router, Switch, Route } from 'react-router-dom'
+import { HashRouter as Router, Switch, Route, Redirect } from 'react-router-dom'
 import Header from '../Header'
 import { AppContainer } from '../SearchPage'
 import SavedWords from '../SavedWords'
@@ -29,9 +29,10 @@ const Main = () => (
               <SavedWords />
             </Container>
           )}
-          path={'/words'}
+          path={'/bookmarks'}
         />
-        <Route component={GraphWithContainers} path={'/'} />
+        <Route component={GraphWithContainers} path={'/graph'} />
+        <Route render={() => <Redirect to={'/graph'} />} />
       </Switch>
     </Router>
   </UnstatedProvider>

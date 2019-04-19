@@ -1,3 +1,10 @@
 .tab-content {
   height: 100%;
 }
+.nav {
+  justify-content: space-between;
+}
+.nav-tabs .nav-link {
+  flex: 1;
+  text-align: center;
+}
