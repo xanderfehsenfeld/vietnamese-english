@@ -100,7 +100,7 @@ context(
               treeshake: true,
               extendServerImport: true,
               ensureES5: true,
-              replaceProcessEnv: false,
+              replaceProcessEnv: true,
             }),
         ],
       })

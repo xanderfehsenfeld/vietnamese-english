@@ -8,30 +8,38 @@ interface IProps {
   count: number
 }
 
-const SavedWordsBadge = ({ count }: IProps) => (
-  <div
-    style={{
-      position: 'relative',
-      display: 'inline-flex',
-      fontSize: 20,
-      verticalAlign: 'top',
-    }}
-  >
-    <FontAwesomeIcon icon={'bookmark'} style={{ marginRight: 5 }} size={'lg'} />
-
-    <span
+const SavedWordsBadge = ({ count }: IProps) => {
+  return (
+    <div
       style={{
-        color: 'white',
-        position: 'absolute',
-        left: 'calc(50% - 7px)',
-        fontSize: 14,
-        fontWeight: 'bold',
+        position: 'relative',
+        display: 'inline-flex',
+        fontSize: 20,
+        verticalAlign: 'top',
+        marginRight: 5,
       }}
     >
-      {count}
-    </span>
-  </div>
-)
+      <FontAwesomeIcon
+        icon={'bookmark'}
+        style={{ marginRight: 5 }}
+        size={'lg'}
+      />
+
+      <span
+        style={{
+          color: 'unset',
+          position: 'absolute',
+          left: 'calc(50% + 8px)',
+          fontSize: 14,
+          fontWeight: 'bold',
+          top: 10,
+        }}
+      >
+        {count}
+      </span>
+    </div>
+  )
+}
 
 export default connect({
   container: AppContainer,

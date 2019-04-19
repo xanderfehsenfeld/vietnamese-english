@@ -14,11 +14,19 @@ import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
 import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
-import Tab from 'react-bootstrap/Tab'
 import ContainerDimensions from 'react-container-dimensions'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
 import Tooltip from 'react-bootstrap/Tooltip'
+import Button from 'react-bootstrap/Button'
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { shuffle, orderBy } from 'lodash'
+import {
+  faRedoAlt,
+  faPlusCircle,
+  faMinusCircle,
+} from '@fortawesome/free-solid-svg-icons'
+library.add(faRedoAlt, faPlusCircle, faMinusCircle)
 
 const config: IReactD3Config = {
   panAndZoom: false,
@@ -38,7 +46,7 @@ const config: IReactD3Config = {
   d3: {
     alphaTarget: 0.05,
     gravity: -250,
-    linkLength: 120,
+    linkLength: 200,
     linkStrength: 2,
   },
   node: {
@@ -53,7 +61,7 @@ const config: IReactD3Config = {
     highlightStrokeWidth: 1.5,
     mouseCursor: 'pointer',
     opacity: 1,
-    renderLabel: true,
+    renderLabel: false,
     size: 1000,
     strokeColor: 'none',
     strokeWidth: 1.5,
@@ -204,36 +212,40 @@ class WordGraph extends React.Component<IProps, IState> {
       this.setDataToRender(dataWithDefinitions)
     }
   }
+  addRandomNode = () => {
+    const { dataToRender } = this.state
+    if (dataToRender) {
+      const { nodes } = dataToRender
+      const nodeWithAdjacents = shuffle(nodes).find(({ hiddenAdjacentNodes }) =>
+        hiddenAdjacentNodes ? hiddenAdjacentNodes.length > 0 : false,
+      )
+      if (nodeWithAdjacents) {
+        this.onClickNode(nodeWithAdjacents.id)
+      }
+    }
+  }
+  removeRandomNode = () => {
+    const { dataToRender } = this.state
+    if (dataToRender) {
+      const { nodes, links } = dataToRender
+      const [leastConnectedNode] = orderBy(nodes, ({ id }) =>
+        links.filter(({ source, target }) => source === id || target === id),
+      )
+      if (leastConnectedNode) {
+        this.removeNode(leastConnectedNode.id)
+      }
+    }
+  }
   render() {
     const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
     const { onChange, selectWord, selectedWord } = this.props
     const { onClickNode } = this
-    config.node.viewGenerator = (props: IGraphNode) => (
-      <GraphNode {...props} removeself={this.removeNode} />
-    )
+    config.node.viewGenerator = (props: IGraphNode) => <GraphNode {...props} />
     return (
       <Container fluid={false} style={{ marginTop: 15 }}>
         <Row>
           <Col lg={5} className={'d-none d-lg-block'}>
-            <SavedWordsSearchTabs>
-              <Tab
-                style={{ flex: 1, width: '100%', textAlign: 'center' }}
-                disabled={prettifyIsDisabled}
-                variant={'success'}
-                title={
-                  <OverlayTrigger
-                    placement={'bottom'}
-                    overlay={
-                      <Tooltip id={`tooltip-${'bottom'}`}>{`Prettify`}</Tooltip>
-                    }
-                  >
-                    <div onClick={this.onClickPrettify}>
-                      <FontAwesomeIcon icon={'magic'} size={'lg'} />
-                    </div>
-                  </OverlayTrigger>
-                }
-              />
-            </SavedWordsSearchTabs>
+            <SavedWordsSearchTabs />
           </Col>
           <Col lg={7}>
             <div
@@ -248,6 +260,60 @@ class WordGraph extends React.Component<IProps, IState> {
                 this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
               }
             >
+              <div style={{ position: 'absolute' }}>
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip
+                      id={`tooltip-${'bottom'}`}
+                    >{`Add Random Word`}</Tooltip>
+                  }
+                >
+                  <Button
+                    onClick={this.addRandomNode}
+                    style={{ marginLeft: 10, marginTop: 10 }}
+                    variant={'warning'}
+                  >
+                    <FontAwesomeIcon icon={'plus-circle'} />
+                  </Button>
+                </OverlayTrigger>
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip
+                      id={`tooltip-${'bottom'}`}
+                    >{`Remove Random Word`}</Tooltip>
+                  }
+                >
+                  <Button
+                    onClick={this.removeRandomNode}
+                    style={{ marginLeft: 10, marginTop: 10 }}
+                    variant={'warning'}
+                  >
+                    <FontAwesomeIcon icon={'minus-circle'} />
+                  </Button>
+                </OverlayTrigger>
+                <OverlayTrigger
+                  placement={'bottom'}
+                  overlay={
+                    <Tooltip id={`tooltip-${'bottom'}`}>
+                      {prettifyIsDisabled ? `Rendering...` : `Re-render`}
+                    </Tooltip>
+                  }
+                >
+                  <Button
+                    disabled={prettifyIsDisabled}
+                    onClick={this.onClickPrettify}
+                    variant={'secondary'}
+                    style={{ marginLeft: 10, marginTop: 10 }}
+                  >
+                    <FontAwesomeIcon
+                      icon={'redo-alt'}
+                      spin={prettifyIsDisabled}
+                    />
+                  </Button>
+                </OverlayTrigger>
+              </div>
               <ContainerDimensions>
                 {({ height, width }) =>
                   dataToRender && dataToRender.nodes.length ? (
@@ -265,8 +331,8 @@ class WordGraph extends React.Component<IProps, IState> {
                       data={dataToRender}
                       config={{
                         ...config,
-                        height: height - 73,
-                        width: width - 10,
+                        height: height - 5,
+                        width: width - 5,
                       }}
                     />
                   ) : null
