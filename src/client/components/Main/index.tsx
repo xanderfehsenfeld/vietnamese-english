@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Provider as UnstatedProvider, Subscribe } from 'unstated'
 import { HashRouter as Router, Switch, Route, Redirect } from 'react-router-dom'
 import Header from '../Header'
-import { AppContainer } from '../SearchPage'
+import { AppContainer } from '../SearchBar'
 import SavedWords from '../SavedWords'
 import GraphWithContainers from '../WordGraph'
 import Container from 'react-bootstrap/Container'
@@ -32,7 +32,7 @@ const Main = () => (
           path={'/bookmarks'}
         />
         <Route component={GraphWithContainers} path={'/graph'} />
-        <Route render={() => <Redirect to={'/graph'} />} />
+        <Route />
       </Switch>
     </Router>
   </UnstatedProvider>

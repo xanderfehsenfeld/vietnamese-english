@@ -1,7 +1,7 @@
 import * as React from 'react'
 import connect from 'unstated-connect2'
 import Badge from 'react-bootstrap/Badge'
-import { AppContainer } from '../SearchPage'
+import { AppContainer } from '../SearchBar'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 
 interface IProps {

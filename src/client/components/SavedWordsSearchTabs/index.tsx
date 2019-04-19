@@ -1,7 +1,7 @@
 import Tab from 'react-bootstrap/Tab'
 import Tabs from 'react-bootstrap/Tabs'
 import SavedWordsBadge from '../SavedWordsBadge'
-import Search from '../SearchPage'
+import Search from '../SearchBar'
 import SavedWords from '../SavedWords'
 import React from 'react'
 import { withRouter } from 'react-router'

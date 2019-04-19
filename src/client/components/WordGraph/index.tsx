@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
-import { AppContainer } from '../SearchPage'
+import { AppContainer } from '../SearchBar'
 import { Dictionary } from '../../../model'
 import connect from 'unstated-connect2'
 

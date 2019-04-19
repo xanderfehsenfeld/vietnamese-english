@@ -1,7 +1,7 @@
 import { Subscribe } from 'unstated'
 import * as React from 'react'
 import DefinitionPage from '../DefinitionPage'
-import { AppContainer } from '../SearchPage'
+import { AppContainer } from '../SearchBar'
 import { Link, Switch, Route } from 'react-router-dom'
 
 const SavedWords = ({ style }: { style?: React.CSSProperties }) => (

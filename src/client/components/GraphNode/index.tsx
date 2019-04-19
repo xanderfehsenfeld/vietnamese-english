@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Definition } from '../../../model'
 import { Subscribe } from 'unstated'
 import './index.scss'
-import { AppContainer } from '../SearchPage'
+import { AppContainer } from '../SearchBar'
 import { IGraphNode } from 'react-d3-graph'
 import Badge from 'react-bootstrap/Badge'
 
