@@ -1,40 +1,26 @@
 import * as React from 'react'
 import { Provider as UnstatedProvider, Subscribe } from 'unstated'
-import { HashRouter as Router, Switch, Route, Redirect } from 'react-router-dom'
 import Header from '../Header'
-import { AppContainer } from '../SearchBar'
-import SavedWords from '../SavedWords'
 import GraphWithContainers from '../WordGraph'
-import Container from 'react-bootstrap/Container'
+import { AppContainer } from '../SearchBar'
 
 const Main = () => (
   <UnstatedProvider>
+    {' '}
     <Subscribe to={[AppContainer]}>
-      {({ state, fetchDictionary, fetchState }: AppContainer) => {
+      {({ state, fetchDictionary }: AppContainer) => {
         if (!state.isFetching && !state.dictionary) {
           fetchDictionary()
         }
-        if (!state.isFetchingSavedWords && !state.didInitialFetch) {
-          fetchState()
-        }
-        return null
+
+        return (
+          <React.Fragment>
+            <Header />
+            <GraphWithContainers key={state.selectedWord || ''} />
+          </React.Fragment>
+        )
       }}
     </Subscribe>
-    <Router>
-      <Header />
-      <Switch>
-        <Route
-          render={() => (
-            <Container fluid={false} style={{ paddingTop: 15 }}>
-              <SavedWords />
-            </Container>
-          )}
-          path={'/bookmarks'}
-        />
-        <Route component={GraphWithContainers} path={'/graph'} />
-        <Route />
-      </Switch>
-    </Router>
   </UnstatedProvider>
 )
 

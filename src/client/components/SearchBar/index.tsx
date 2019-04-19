@@ -3,13 +3,13 @@ import { Subscribe, Container } from 'unstated'
 import './index.scss'
 import axios from 'axios'
 import { Dictionary, Definition, Translation } from 'model'
-import { pickBy, map, orderBy, uniqBy, uniq, throttle, once } from 'lodash'
+import { pickBy, map, orderBy, uniqBy, uniq } from 'lodash'
 import DefinitionPage from '../DefinitionPage'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faBackspace } from '@fortawesome/free-solid-svg-icons'
 library.add(faBackspace)
-interface ISuggestion {
+export interface ISuggestion {
   text: string
   translation?: string
   definitions: Definition[]
@@ -17,9 +17,6 @@ interface ISuggestion {
 }
 
 interface ISavedWordsState {
-  savedWords: string[]
-  isFetchingSavedWords: boolean
-  didInitialFetch: boolean
   selectedWord?: string
 }
 
@@ -33,10 +30,7 @@ type IState = ISavedWordsState & {
   selectedWord?: string
   translationVietnameseEnglish: { [key: string]: string }
   isFetchingTranslations: boolean
-  checkedWords: string[]
 }
-
-type SubType<Base> = { [Key in keyof Base]?: Base[Key] }
 
 const removeAccents = (str: string) =>
   str.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -48,22 +42,6 @@ export class AppContainer extends Container<IState> {
     showExample: true,
     translationVietnameseEnglish: {},
     isFetchingTranslations: false,
-    checkedWords: [],
-    savedWords: [],
-    isFetchingSavedWords: false,
-    didInitialFetch: false,
-  }
-
-  toggleWordFromCheckedWords = (word: string) => {
-    const { checkedWords } = this.state
-    let newCheckedWords
-    if (checkedWords.includes(word)) {
-      newCheckedWords = checkedWords.filter((v) => v !== word)
-    } else {
-      newCheckedWords = checkedWords.concat([word])
-    }
-    this.setState({ checkedWords: newCheckedWords })
-    this.persistState({ checkedWords: newCheckedWords })
   }
 
   toggleShowExample = () => {
@@ -119,7 +97,7 @@ export class AppContainer extends Container<IState> {
       this.setState({ suggestions: [] })
     }
 
-    this.setState({ query: changedQuery, selectedWord: undefined })
+    this.setState({ query: changedQuery })
   }
   fetchTranslations = async (wordsToTranslate: string[]) => {
     const { isFetchingTranslations, translationVietnameseEnglish } = this.state
@@ -176,62 +154,6 @@ export class AppContainer extends Container<IState> {
   selectWord = (word: string) => {
     this.setState({ selectedWord: word })
   }
-  persistState = throttle(async (state: SubType<IState>) => {
-    const {
-      translationVietnameseEnglish,
-      savedWords,
-      checkedWords,
-    } = this.state
-
-    await axios.post('state', {
-      translationVietnameseEnglish,
-      savedWords,
-      checkedWords,
-      ...state,
-    })
-  }, 100)
-  fetchState = once(async () => {
-    this.setState({ isFetchingSavedWords: true })
-    try {
-      const state: SubType<IState> = (await axios.get('state')).data
-      this.setState({
-        ...state,
-        isFetchingSavedWords: false,
-        didInitialFetch: true,
-      })
-    } catch (e) {
-      console.error(e)
-    }
-
-    this.setState({
-      isFetchingSavedWords: false,
-      didInitialFetch: true,
-    })
-  })
-
-  addWordToSavedWords = async (word: string) => {
-    const { savedWords, checkedWords } = this.state
-    if (checkedWords.length < 3 && !checkedWords.includes(word)) {
-      this.toggleWordFromCheckedWords(word)
-    }
-    const newSavedWords = savedWords.concat([word])
-    this.setState({ savedWords: newSavedWords })
-    await this.persistState({
-      savedWords: newSavedWords,
-    })
-  }
-
-  removeWordFromSavedWords = async (word: string) => {
-    const { savedWords, checkedWords } = this.state
-    const newSavedWords = savedWords.filter((w) => w !== word)
-    this.setState({ savedWords: newSavedWords })
-    await this.persistState({
-      savedWords: newSavedWords,
-      checkedWords: checkedWords.filter((checkedWord) =>
-        newSavedWords.includes(checkedWord),
-      ),
-    })
-  }
 }
 
 const Search = () => (
@@ -248,9 +170,6 @@ const Search = () => (
         isFetching,
         suggestions,
         translationVietnameseEnglish,
-        selectedWord,
-        savedWords,
-        checkedWords,
       } = state
 
       return (
@@ -270,14 +189,23 @@ const Search = () => (
               type="text"
               disabled={isFetching}
               placeholder={
-                isFetching ? 'Fetching...' : 'Search to add words...'
+                isFetching ? 'Fetching...' : 'Enter a vietnamese word...'
               }
               aria-label="Search"
-              onChange={(e) => changeSearchQuery(e.target.value)}
+              onChange={(e) => {
+                changeSearchQuery(e.target.value)
+              }}
               value={query}
             />
             <div
-              onClick={query ? () => changeSearchQuery('') : undefined}
+              onClick={
+                query
+                  ? () => {
+                      changeSearchQuery('')
+                      selectWord('')
+                    }
+                  : undefined
+              }
               style={{
                 position: 'absolute',
                 top: 12,
@@ -337,24 +265,16 @@ const Search = () => (
                       }}
                       onClick={() => {
                         changeSearchQuery(suggestion.text)
-                        if (savedWords.includes(suggestion.text)) {
-                          selectWord(suggestion.text)
-                        }
+                        selectWord(suggestion.text)
                       }}
                     >
                       <DefinitionPage
                         definitions={suggestion.definitions}
                         text={suggestion.text}
-                        isChecked={
-                          savedWords.includes(suggestion.text)
-                            ? checkedWords.includes(suggestion.text)
-                            : undefined
-                        }
                         translation={
                           translationVietnameseEnglish[suggestion.text] || '...'
                         }
                         showExample={showExample}
-                        isSelected={suggestion.text === selectedWord}
                       >
                         {suggestion.text.substring(0, suggestion.start)}
                         <strong>

@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { Graph, IGraphData, IReactD3Config, IGraphNode } from 'react-d3-graph'
-import { AppContainer } from '../SearchBar'
+import Search, { AppContainer } from '../SearchBar'
 import { Dictionary } from '../../../model'
 import connect from 'unstated-connect2'
 
@@ -13,7 +13,6 @@ import GraphNode from '../GraphNode'
 import Col from 'react-bootstrap/Col'
 import Row from 'react-bootstrap/Row'
 import Container from 'react-bootstrap/Container'
-import SavedWordsSearchTabs from '../SavedWordsSearchTabs'
 import ContainerDimensions from 'react-container-dimensions'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger'
@@ -96,7 +95,6 @@ interface IProps {
   wordsWithoutSpacesMappedToCompoundWords?: { [key: string]: string[] }
   savedWords: string[]
   onChange: (word: string) => void
-  selectWord: (word: string) => void
   selectedWord?: string
   dictionary?: Dictionary
 }
@@ -112,7 +110,9 @@ class WordGraph extends React.Component<IProps, IState> {
   initializeSavedWords = () => {
     const { savedWords } = this.props
     savedWords.forEach((word, i) =>
-      setTimeout(() => this.addInitialNodesForWord(word), 250 * i),
+      setTimeout(() => {
+        this.addInitialNodesForWord(word)
+      }, 250 * i),
     )
   }
   componentWillReceiveProps = ({ savedWords: nextSavedWords }: IProps) => {
@@ -238,108 +238,129 @@ class WordGraph extends React.Component<IProps, IState> {
   }
   render() {
     const { dataToRender, lastClickedPrettify, prettifyIsDisabled } = this.state
-    const { onChange, selectWord, selectedWord } = this.props
+    const { onChange, selectedWord } = this.props
     const { onClickNode } = this
+
     config.node.viewGenerator = (props: IGraphNode) => <GraphNode {...props} />
     return (
       <Container fluid={false} style={{ marginTop: 15 }}>
         <Row>
-          <Col lg={5} className={'d-none d-lg-block'}>
-            <SavedWordsSearchTabs />
-          </Col>
-          <Col lg={7}>
+          <Col
+            lg={selectedWord ? 5 : 12}
+            className={'d-none d-lg-block'}
+            style={{
+              transition: 'all 0.3s ease-in-out',
+            }}
+          >
             <div
               style={{
-                cursor: 'grab',
-                width: '100%',
+                marginTop: 100,
                 height: '100%',
-                minHeight: 'calc(100vh - 87px)',
-                border: 'solid 1px #dee2e6',
+                overflowY: 'hidden',
+                maxHeight: 'calc(100vh - 68px) ',
+
+                marginRight: -14,
+                marginLeft: -14,
               }}
-              onClick={(e) =>
-                this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
-              }
             >
-              <div style={{ position: 'absolute' }}>
-                <OverlayTrigger
-                  placement={'bottom'}
-                  overlay={
-                    <Tooltip
-                      id={`tooltip-${'bottom'}`}
-                    >{`Add Random Word`}</Tooltip>
-                  }
-                >
-                  <Button
-                    onClick={this.addRandomNode}
-                    style={{ marginLeft: 10, marginTop: 10 }}
-                    variant={'warning'}
-                  >
-                    <FontAwesomeIcon icon={'plus-circle'} />
-                  </Button>
-                </OverlayTrigger>
-                <OverlayTrigger
-                  placement={'bottom'}
-                  overlay={
-                    <Tooltip
-                      id={`tooltip-${'bottom'}`}
-                    >{`Remove Random Word`}</Tooltip>
-                  }
-                >
-                  <Button
-                    onClick={this.removeRandomNode}
-                    style={{ marginLeft: 10, marginTop: 10 }}
-                    variant={'warning'}
-                  >
-                    <FontAwesomeIcon icon={'minus-circle'} />
-                  </Button>
-                </OverlayTrigger>
-                <OverlayTrigger
-                  placement={'bottom'}
-                  overlay={
-                    <Tooltip id={`tooltip-${'bottom'}`}>
-                      {prettifyIsDisabled ? `Rendering...` : `Re-render`}
-                    </Tooltip>
-                  }
-                >
-                  <Button
-                    disabled={prettifyIsDisabled}
-                    onClick={this.onClickPrettify}
-                    variant={'secondary'}
-                    style={{ marginLeft: 10, marginTop: 10 }}
-                  >
-                    <FontAwesomeIcon
-                      icon={'redo-alt'}
-                      spin={prettifyIsDisabled}
-                    />
-                  </Button>
-                </OverlayTrigger>
-              </div>
-              <ContainerDimensions>
-                {({ height, width }) =>
-                  dataToRender && dataToRender.nodes.length ? (
-                    <Graph
-                      key={lastClickedPrettify}
-                      onClickNode={async (id: string) => {
-                        if (selectedWord === id) {
-                          onClickNode(id)
-                        } else {
-                          await onChange(id)
-                          selectWord(id)
-                        }
-                      }}
-                      id="graph-id"
-                      data={dataToRender}
-                      config={{
-                        ...config,
-                        height: height - 5,
-                        width: width - 5,
-                      }}
-                    />
-                  ) : null
-                }
-              </ContainerDimensions>
+              <Search />
             </div>
           </Col>
+          {selectedWord && (
+            <Col lg={7} className={selectedWord ? '' : 'd-none'}>
+              <div
+                style={{
+                  cursor: 'grab',
+                  width: '100%',
+                  height: '100%',
+                  minHeight: 'calc(100vh - 87px)',
+                  border: 'solid 1px #dee2e6',
+                }}
+                onClick={(e) =>
+                  this.setState({ lastClicked: { x: e.clientX, y: e.clientY } })
+                }
+              >
+                <div style={{ position: 'absolute' }}>
+                  <OverlayTrigger
+                    placement={'bottom'}
+                    overlay={
+                      <Tooltip
+                        id={`tooltip-${'bottom'}`}
+                      >{`Add related word`}</Tooltip>
+                    }
+                  >
+                    <Button
+                      onClick={this.addRandomNode}
+                      style={{ marginLeft: 10, marginTop: 10 }}
+                      variant={'warning'}
+                    >
+                      <FontAwesomeIcon icon={'plus-circle'} />
+                    </Button>
+                  </OverlayTrigger>
+                  <OverlayTrigger
+                    placement={'bottom'}
+                    overlay={
+                      <Tooltip
+                        id={`tooltip-${'bottom'}`}
+                      >{`Remove related word`}</Tooltip>
+                    }
+                  >
+                    <Button
+                      onClick={this.removeRandomNode}
+                      style={{ marginLeft: 10, marginTop: 10 }}
+                      variant={'warning'}
+                    >
+                      <FontAwesomeIcon icon={'minus-circle'} />
+                    </Button>
+                  </OverlayTrigger>
+                  <OverlayTrigger
+                    placement={'bottom'}
+                    overlay={
+                      <Tooltip id={`tooltip-${'bottom'}`}>
+                        {prettifyIsDisabled ? `Rendering...` : `Re-render`}
+                      </Tooltip>
+                    }
+                  >
+                    <Button
+                      disabled={prettifyIsDisabled}
+                      onClick={this.onClickPrettify}
+                      variant={'secondary'}
+                      style={{ marginLeft: 10, marginTop: 10 }}
+                    >
+                      <FontAwesomeIcon
+                        icon={'redo-alt'}
+                        spin={prettifyIsDisabled}
+                      />
+                    </Button>
+                  </OverlayTrigger>
+                </div>
+
+                <ContainerDimensions>
+                  {({ height, width }) =>
+                    dataToRender && dataToRender.nodes.length ? (
+                      <Graph
+                        key={lastClickedPrettify}
+                        onClickNode={async (id: string) => {
+                          if (selectedWord === id) {
+                            onClickNode(id)
+                          } else {
+                            await onChange(id)
+                          }
+                        }}
+                        id="graph-id"
+                        data={dataToRender}
+                        config={{
+                          ...config,
+                          height: height - 5,
+                          width: width - 5,
+                        }}
+                      />
+                    ) : null
+                  }
+                </ContainerDimensions>
+              </div>
+            </Col>
+          )}
         </Row>
       </Container>
     )
@@ -349,19 +370,17 @@ class WordGraph extends React.Component<IProps, IState> {
 const GraphWithContainers = connect({
   container: AppContainer,
   selector: ({ container }: { container: AppContainer }): IProps => {
-    const { selectWord, changeSearchQuery } = container
+    const { changeSearchQuery } = container
     const {
       dictionary,
       wordsWithoutSpacesMappedToCompoundWords,
-      checkedWords,
-      savedWords,
       selectedWord,
     } = container.state
+
     return {
       wordsWithoutSpacesMappedToCompoundWords,
       dictionary,
-      savedWords: checkedWords.filter((v) => savedWords.includes(v)),
-      selectWord,
+      savedWords: selectedWord ? [selectedWord] : [],
       selectedWord,
       onChange: changeSearchQuery,
     }
